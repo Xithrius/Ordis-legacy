@@ -36,5 +36,5 @@ class MainCog(Cog):
 
     @Cog.listener()
     async def on_message(self, message: Message) -> None:
-        if not random.randint(0, 50):
+        if not random.randint(0, 30):
             await message.channel.send(self.all_quotes[next(self.message_cycle_indexes)])
