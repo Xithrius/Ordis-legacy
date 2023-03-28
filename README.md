@@ -1,2 +1,3 @@
 # Ordis
-Cephalon Ordis from Warframe.
+
+Cephalon Ordis from Warframe as a Discord bot.

@@ -1,6 +1,6 @@
 from os import getenv
 
-from bot.bot import Ordis
+from ordis.bot import Ordis
 
 bot_instance = Ordis(
     command_prefix="Ordis ",

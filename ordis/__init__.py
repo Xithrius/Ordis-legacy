@@ -23,7 +23,7 @@ LOG_FORMAT = "%(asctime)s | %(name)s | %(levelname)s | %(message)s"
 
 log_formatter = logging.Formatter(LOG_FORMAT)
 
-log_file = Path.cwd() / "logs" / "bot.log"
+log_file = Path.cwd() / "logs" / "ordis.log"
 log_file.parent.mkdir(exist_ok=True)
 
 file_handler = handlers.RotatingFileHandler(log_file, maxBytes=8388608, backupCount=7, encoding="utf-8")

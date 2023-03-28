@@ -26,7 +26,7 @@ class MainCog(Cog):
     def __init__(self, bot: Ordis) -> None:
         self.bot = bot
 
-        with open("./bot/resources/quotes.yaml", mode="r", encoding="utf-8") as f:
+        with open("./ordis/resources/quotes.yaml", mode="r", encoding="utf-8") as f:
             self.all_quotes = yaml.load(f, yaml.FullLoader)
 
         quote_indexes = list(range(len(self.all_quotes)))
