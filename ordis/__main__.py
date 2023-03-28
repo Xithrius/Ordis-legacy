@@ -1,10 +1,11 @@
-from os import getenv
+import asyncio
 
 from ordis.bot import Ordis
 
-bot_instance = Ordis(
-    command_prefix="Ordis ",
-    help_command=None
-)
 
-bot_instance.run(getenv("BOT_TOKEN"), bot=True, reconnect=True)
+async def main():
+    bot = Ordis()
+    await bot.start()
+
+
+asyncio.run(main())

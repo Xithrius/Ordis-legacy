@@ -1,40 +1,40 @@
-import itertools
-import logging
-import random
+import os
 
-import yaml
-from discord import Message
-from discord.ext.commands import Bot, Cog
+from discord import AllowedMentions, Intents
+from discord.ext import commands
+from dotenv import load_dotenv
+from loguru import logger as log
 
-log = logging.getLogger(__name__)
+load_dotenv()
 
 
-class Ordis(Bot):
+class Ordis(commands.Bot):
+    """A subclass where important tasks and connections are created."""
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self) -> None:
+        """Initializing the bot with proper permissions."""
+        intents = Intents.default()
+        intents.members = True
+        intents.message_content = True
 
-        self.add_cog(MainCog(self))
+        super().__init__(
+            command_prefix=".",
+            case_insensitive=True,
+            help_command=None,
+            allowed_mentions=AllowedMentions(everyone=False),
+            intents=intents,
+        )
+
+    async def start(self):
+        token = os.getenv("BOT_TOKEN")
+
+        if token is None:
+            log.error("Retrieving token returned none")
+            exit(1)
+
+        await super().start(token=token)
 
     @staticmethod
     async def on_ready() -> None:
-        log.trace("Awaiting...")
-
-
-class MainCog(Cog):
-
-    def __init__(self, bot: Ordis) -> None:
-        self.bot = bot
-
-        with open("./ordis/resources/quotes.yaml", mode="r", encoding="utf-8") as f:
-            self.all_quotes = yaml.load(f, yaml.FullLoader)
-
-        quote_indexes = list(range(len(self.all_quotes)))
-        random.shuffle(quote_indexes)
-
-        self.message_cycle_indexes = itertools.cycle(quote_indexes)
-
-    @Cog.listener()
-    async def on_message(self, message: Message) -> None:
-        if not random.randint(0, 30):
-            await message.channel.send(self.all_quotes[next(self.message_cycle_indexes)])
+        """Updates the bot status when logged in successfully."""
+        log.info("Awaiting...")
