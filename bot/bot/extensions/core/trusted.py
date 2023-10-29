@@ -4,7 +4,7 @@ from datetime import datetime
 from discord.ext.commands import Cog, group, is_owner
 from httpx import Response
 
-from bot.bot import Xythrion
+from bot.bot import Ordis
 from bot.context import Context
 from bot.utils import dict_to_human_table
 
@@ -19,7 +19,7 @@ class TrustedData:
 class Trusted(Cog):
     """Adding trusted users for elevated commands."""
 
-    def __init__(self, bot: Xythrion) -> None:
+    def __init__(self, bot: Ordis) -> None:
         self.bot = bot
 
     @group(aliases=("trusted",))
@@ -63,5 +63,5 @@ class Trusted(Cog):
         await ctx.send(f"Trust removed from <@{user_id}>")
 
 
-async def setup(bot: Xythrion) -> None:
+async def setup(bot: Ordis) -> None:
     await bot.add_cog(Trusted(bot))

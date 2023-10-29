@@ -1,7 +1,7 @@
 from discord.ext.commands import Cog, ExtensionNotLoaded, group
 from loguru import logger as log
 
-from bot.bot import EXTENSIONS, Xythrion
+from bot.bot import EXTENSIONS, Ordis
 from bot.context import Context
 from bot.utils import Extension, codeblock, is_trusted
 
@@ -9,7 +9,7 @@ from bot.utils import Extension, codeblock, is_trusted
 class Extensions(Cog):
     """Loading, unloading, reloading extensions."""
 
-    def __init__(self, bot: Xythrion):
+    def __init__(self, bot: Ordis):
         self.bot = bot
 
     @group(aliases=("extensions", "e"))
@@ -86,5 +86,5 @@ class Extensions(Cog):
         await ctx.send(codeblock(cmd_tree, language="python"))
 
 
-async def setup(bot: Xythrion) -> None:
+async def setup(bot: Ordis) -> None:
     await bot.add_cog(Extensions(bot))

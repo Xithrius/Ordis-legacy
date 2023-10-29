@@ -1,11 +1,13 @@
 import asyncio
 
-from ordis.bot import Ordis
+from .bot import Ordis
 
 
-async def main():
+async def main() -> None:
     bot = Ordis()
+
     await bot.start()
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

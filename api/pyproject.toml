@@ -1,16 +1,27 @@
 [project]
-name = "ordis-bot"
+name = "ordis-api"
 version = "0.1.0"
-description = "Bot portion of Ordis"
+description = "API portion of Ordis"
 authors = [{ name = "Xithrius", email = "xithrius@gmail.com" }]
 requires-python = ">=3.11"
 license = { text = "MIT" }
 dependencies = [
-    "discord-py>=2.3.2",
-    "python-dotenv>=1.0.0",
-    "loguru>=0.7.0",
+    "fastapi>=0.103.2",
+    "uvicorn[standard]>=0.23.2",
+    "gunicorn>=21.2.0",
+    "sqlalchemy[asyncio]>=2.0.21",
+    "asyncpg>=0.28.0",
+    "alembic>=1.12.0",
+    "pydantic>=2.4.2",
+    "pydantic-settings>=2.0.3",
     "httpx>=0.24.1",
-    "humanize>=4.8.0",
+    "httptools>=0.6.0",
+    "yarl>=1.9.2",
+    "ujson>=5.8.0",
+    "python-dotenv>=1.0.0",
+    "loguru>=0.7.2",
+    "prometheus-client>=0.17.1",
+    "prometheus-fastapi-instrumentator>=6.1.0",
 ]
 
 [tool]
@@ -27,10 +38,12 @@ test = [
 ]
 
 [tool.pdm.scripts]
-start = "python -m bot"
+start = "python3 -m app"
 lint = "pre-commit run --all-files"
 fmt = "ruff format ."
 precommit = "pre-commit install"
+migrate = "alembic revision --autogenerate -m"
+upgrade = "alembic upgrade head"
 test = "pytest"
 
 [build-system]

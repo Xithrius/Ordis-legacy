@@ -14,10 +14,9 @@ from dotenv import load_dotenv
 from httpx import AsyncClient
 from loguru import logger as log
 
-from bot.api import APIClient
-from bot.context import Context
-
 from . import extensions
+from .api import APIClient
+from .context import Context
 
 load_dotenv()
 
@@ -45,7 +44,7 @@ def walk_extensions() -> Iterator[str]:
 EXTENSIONS = frozenset(walk_extensions())
 
 
-class Xythrion(Bot):
+class Ordis(Bot):
     """A subclass where important tasks and connections are created."""
 
     def __init__(self) -> None:

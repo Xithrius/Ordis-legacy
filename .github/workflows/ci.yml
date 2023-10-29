@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        directory: ['bot']
+        directory: ['bot', 'api']
 
     steps:
     - name: Checkout repository
@@ -44,12 +44,12 @@ jobs:
 
     - name: Run tests
       working-directory: ${{ matrix.directory }}
-        # Matplotlib tests are currently broken, skipping for now.
+      # Nothing to test in the bot directory, at least for now
       run: |
-        if [ "${{ matrix.directory }}" != 'api' ]; then
+        if [ "${{ matrix.directory }}" != 'bot' ]; then
           pdm test
         else
-          echo "Skipping tests for 'api' directory."
+          echo "Skipping tests for 'bot' directory."
         fi
 
     - name: Prepare Pull Request Payload artifact
