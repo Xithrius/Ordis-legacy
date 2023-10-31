@@ -43,7 +43,7 @@ class MarketSetItem(BaseModel):
 
 class MarketSet(BaseModel):
     id: str
-    items_in_set: MarketSetItem
+    items_in_set: list[MarketSetItem]
 
 
 class Market(Cog):
@@ -62,7 +62,7 @@ class Market(Cog):
 
         self.items = [MarketItem(**item) for item in items]
 
-    def fuzzy_find_key(self, search: str) -> None:
+    def fuzzy_find_key(self, search: str) -> MarketItem:
         best_match: MarketItem | None = None
         best_score = 0
 
@@ -78,9 +78,16 @@ class Market(Cog):
 
         return best_match
 
-    @staticmethod
-    async def get_single_item(item_url: str) -> MarketSet:
-        pass
+    async def process_items_in_set(self, item_url: str) -> MarketSet:
+        r = await self.bot.warframe_market_api.get(
+            f"/items/{item_url}",
+        )
+
+        data = r.json()
+
+        item_set = MarketSet(**(data["payload"]["item"]))
+
+        return item_set
 
     @command()
     async def market(self, ctx: Context, *, search: str) -> None:
@@ -90,9 +97,9 @@ class Market(Cog):
 
         item = await to_thread(self.fuzzy_find_key, search)
 
-        await self.process_items_in_set(item)
+        item_set = await self.process_items_in_set(item.url_name)
 
-        await ctx.send(item)
+        await ctx.send(item_set)
 
 
 async def setup(bot: Ordis) -> None:
