@@ -1,6 +1,7 @@
 from asyncio import to_thread
 from typing import Any
 
+import pandas as pd
 from discord.ext.commands import Cog, Context, group
 from loguru import logger as log
 from pydantic import BaseModel
@@ -139,14 +140,15 @@ class Market(Cog):
 
         return item_set
 
-    async def get_market_order(self, item_url: str) -> list[MarketOrder]:
+    async def get_market_order(self, item_url: str) -> list[dict]:
         r = await self.bot.warframe_market_api.get(
             f"/items/{item_url}/orders",
         )
 
         data = r.json()
 
-        item_orders = [MarketOrder(**x) for x in data["payload"]["orders"]]
+        # item_orders = [MarketOrder(**x) for x in data["payload"]["orders"]]
+        item_orders = data["payload"]["orders"]
 
         return item_orders
 
@@ -185,9 +187,15 @@ class Market(Cog):
 
         item_orders = await self.get_market_order(item.url_name)
 
-        order = item_orders[0]
+        df = pd.DataFrame(item_orders)
 
-        await ctx.send(order)
+        sorted_df = df.sort_values(
+            by=["platinum", df["user"].apply(lambda x: x["reputation"])], ascending=[True, False]
+        )
+
+        desired_row = sorted_df.iloc[0]
+
+        await ctx.send(f"```{desired_row}```")
 
 
 async def setup(bot: Ordis) -> None:
