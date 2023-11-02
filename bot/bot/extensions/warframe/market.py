@@ -2,6 +2,7 @@ from asyncio import to_thread
 from typing import Any
 
 import pandas as pd
+from discord import Embed
 from discord.ext.commands import Cog, Context, group
 from loguru import logger as log
 from pydantic import BaseModel
@@ -179,6 +180,19 @@ class Market(Cog):
 
     @market.command(aliases=("order", "buy", "sell"))
     async def market_order(self, ctx: Context, *, search: str) -> None:
+        def __build_embed_section(title: str, sorted_df: pd.DataFrame) -> str:
+            bold_title = f"**{title}**"
+            user = sorted_df["user"]
+            attributes = "\n".join(
+                f"{y[0]}: {y[1]}"
+                for y in [["User", user["ingame_name"]]]
+                + [[x, sorted_df[x]] for x in ["platinum", "quantity", "user_reputation"]]
+            )
+
+            output = f"{bold_title}\n```{attributes}```"
+
+            return output
+
         if not len(self.items):
             async with ctx.typing():
                 await self.populate_items_cache()
@@ -189,13 +203,29 @@ class Market(Cog):
 
         df = pd.DataFrame(item_orders)
 
-        sorted_df = df.sort_values(
-            by=["platinum", df["user"].apply(lambda x: x["reputation"])], ascending=[True, False]
-        )
+        df["user_reputation"] = df["user"].apply(lambda x: x["reputation"])
 
-        desired_row = sorted_df.iloc[0]
+        sorted_dfs = [
+            ["Lowest overall platinum", df.sort_values(by="platinum", ascending=True)],
+            [
+                "Highest reputation, lowest platinum",
+                df.sort_values(by=["platinum", "user_reputation"], ascending=[True, False]),
+            ],
+            [
+                "Lowest reputation, lowest platinum",
+                df.sort_values(by=["platinum", "user_reputation"], ascending=[True, True]),
+            ],
+        ]
 
-        await ctx.send(f"```{desired_row}```")
+        raw_embed = "\n\n".join(__build_embed_section(x[0], x[1].iloc[0]) for x in sorted_dfs)
+
+        item_name = " ".join(f"{x[0].upper()}{x[1:]}" for x in item.item_name.split("_"))
+
+        embed = Embed(title=item_name, description=raw_embed)
+
+        embed.set_thumbnail(url=f"{BASE_ASSETS_URL}/{item.thumb}")
+
+        await ctx.send(embed=embed)
 
 
 async def setup(bot: Ordis) -> None:
