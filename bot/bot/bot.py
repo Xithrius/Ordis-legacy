@@ -1,12 +1,14 @@
 import importlib
 import inspect
 import pkgutil
+import sys
+import traceback
 from collections.abc import Iterator
 from os import getenv
 from typing import NoReturn
 
-from discord import AllowedMentions, Intents
-from discord.ext.commands import Bot
+from discord import AllowedMentions, Embed, Intents, Interaction, app_commands
+from discord.ext.commands import Bot, CommandError, Context
 from dotenv import load_dotenv
 from httpx import AsyncClient
 from loguru import logger as log
@@ -67,6 +69,27 @@ class Ordis(Bot):
 
             ext_name = ".".join(extension.split(".")[-2:])
             log.info(f'Loading extension "{ext_name}"')
+
+    async def on_command_error(
+        self,
+        ctx: Context | Interaction,
+        error: CommandError | app_commands.AppCommandError,
+    ) -> None:
+        if isinstance(ctx, Interaction) or ctx.command is None:
+            return
+
+        log.error(f"Ignoring exception in command {ctx.command}:", file=sys.stderr)
+
+        traceback.print_exception(
+            type(error),
+            error,
+            error.__traceback__,
+            file=sys.stderr,
+        )
+
+        embed = Embed(description=f"```{error}```")
+
+        await ctx.send(embed=embed)
 
     async def start(self) -> None:
         token = getenv("BOT_TOKEN")

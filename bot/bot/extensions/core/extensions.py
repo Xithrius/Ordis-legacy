@@ -45,6 +45,7 @@ class Extensions(Cog):
         log.info(msg)
 
         await ctx.send(msg)
+
         return None
 
     @extension.command(aliases=("list", "l", "cmds", "c"))
