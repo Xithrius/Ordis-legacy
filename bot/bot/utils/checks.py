@@ -1,10 +1,8 @@
 from collections.abc import Callable
 
-from discord.ext.commands import check
+from discord.ext.commands import Context, check
 from discord.ext.commands.errors import MissingPermissions
 from httpx import Response
-
-from bot.context import Context
 
 
 def is_trusted() -> Callable:

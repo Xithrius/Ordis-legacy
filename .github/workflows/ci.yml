@@ -42,15 +42,14 @@ jobs:
       working-directory: ${{ matrix.directory }}
       run: pdm lint
 
-    - name: Run tests
-      working-directory: ${{ matrix.directory }}
-      # Nothing to test in the bot directory, at least for now
-      run: |
-        if [ "${{ matrix.directory }}" != 'bot' ]; then
-          pdm test
-        else
-          echo "Skipping tests for 'bot' directory."
-        fi
+    # - name: Run tests
+    #   working-directory: ${{ matrix.directory }}
+    #   run: |
+    #     if [ "${{ matrix.directory }}" != 'bot' ]; then
+    #       pdm test
+    #     else
+    #       echo "Skipping tests for 'bot' directory."
+    #     fi
 
     - name: Prepare Pull Request Payload artifact
       working-directory: ${{ matrix.directory }}

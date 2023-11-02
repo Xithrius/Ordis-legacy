@@ -4,19 +4,16 @@ import pkgutil
 import sys
 import traceback
 from collections.abc import Iterator
-from datetime import timedelta, timezone
 from os import getenv
 from typing import NoReturn
 
-from discord import AllowedMentions, Embed, Intents, Interaction, Message, app_commands
-from discord.ext.commands import Bot, CommandError
+from discord import AllowedMentions, Embed, Intents, Interaction, app_commands
+from discord.ext.commands import Bot, CommandError, Context
 from dotenv import load_dotenv
 from httpx import AsyncClient
 from loguru import logger as log
 
 from . import extensions
-from .api import APIClient
-from .context import Context
 
 load_dotenv()
 
@@ -45,35 +42,39 @@ EXTENSIONS = frozenset(walk_extensions())
 
 
 class Ordis(Bot):
-    """A subclass where important tasks and connections are created."""
-
     def __init__(self) -> None:
-        """Initializing the bot with proper permissions."""
         intents = Intents.default()
         intents.members = True
         intents.message_content = True
 
-        # https://stackoverflow.com/a/30712187
-        timezone_offset: float = 0.0
-        self.tzinfo = timezone(timedelta(hours=timezone_offset))
-
         super().__init__(
-            command_prefix="^",
+            command_prefix=";;;",
             case_insensitive=True,
             allowed_mentions=AllowedMentions(everyone=False),
             intents=intents,
         )
 
-    async def get_context(self, message: Message, *, cls: Context = Context) -> Context:
-        """Defines the custom context."""
-        return await super().get_context(message, cls=cls)
+    async def setup_hook(self) -> None:
+        self.warframe_status_api = AsyncClient(
+            base_url="https://docs.warframestat.us/pc/",
+            params={"language": "en"},
+        )
+        self.warframe_market_api = AsyncClient(
+            base_url="https://api.warframe.market/v1/",
+            headers={"Language": "en"},
+        )
+
+        for extension in EXTENSIONS:
+            await self.load_extension(extension)
+
+            ext_name = ".".join(extension.split(".")[-2:])
+            log.info(f'Loading extension "{ext_name}"')
 
     async def on_command_error(
         self,
         ctx: Context | Interaction,
         error: CommandError | app_commands.AppCommandError,
     ) -> None:
-        """Reporting errors to the console and the user."""
         if isinstance(ctx, Interaction) or ctx.command is None:
             return
 
@@ -86,35 +87,11 @@ class Ordis(Bot):
             file=sys.stderr,
         )
 
-        data = {"command_name": ctx.command.name, "successfully_completed": False}
+        embed = Embed(description=f"```{error}```")
 
-        await self.api.post("/api/command_metrics/", data=data)
-
-        await ctx.send(embed=Embed(description=f"`{error}`"))
-
-    async def on_command_completion(self, ctx: Context) -> None:
-        if ctx.command is None:
-            return
-
-        data = {"command_name": ctx.command.name, "successfully_completed": True}
-
-        await self.api.post("/api/command_metrics/", data=data)
-
-    async def setup_hook(self) -> None:
-        """Things to setup before the bot logs on."""
-        api_url = getenv("API_URL", "http://localhost:8000")
-
-        self.api = APIClient(api_url)
-        self.http_client = AsyncClient()
-
-        for extension in EXTENSIONS:
-            await self.load_extension(extension)
-
-            ext_name = ".".join(extension.split(".")[-2:])
-            log.info(f'Loading extension "{ext_name}"')
+        await ctx.send(embed=embed)
 
     async def start(self) -> None:
-        """Things to run before bot starts."""
         token = getenv("BOT_TOKEN")
 
         if token is None:
@@ -124,13 +101,11 @@ class Ordis(Bot):
         await super().start(token=token)
 
     async def close(self) -> None:
-        """Things to run before the bot logs off."""
-        await self.api.aclose()
-        await self.http_client.aclose()
+        await self.warframe_status_api.aclose()
+        await self.warframe_market_api.aclose()
 
         await super().close()
 
     @staticmethod
     async def on_ready() -> None:
-        """Updates the bot status when logged in successfully."""
         log.info("Awaiting...")

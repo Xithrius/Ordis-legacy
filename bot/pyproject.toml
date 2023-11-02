@@ -11,6 +11,8 @@ dependencies = [
     "loguru>=0.7.0",
     "httpx>=0.24.1",
     "humanize>=4.8.0",
+    "rapidfuzz>=3.4.0",
+    "pydantic>=2.4.2",
 ]
 
 [tool]
@@ -28,10 +30,10 @@ test = [
 
 [tool.pdm.scripts]
 start = "python -m bot"
-lint = "pre-commit run --all-files"
 fmt = "ruff format ."
+lint = "pre-commit run --all-files"
 precommit = "pre-commit install"
-test = "pytest"
+test = "pytest -n auto"
 
 [build-system]
 requires = ["pdm-pep517>=1.0.0"]
