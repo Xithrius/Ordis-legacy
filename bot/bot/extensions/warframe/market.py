@@ -180,18 +180,13 @@ class Market(Cog):
 
     @market.command(aliases=("order", "buy", "sell"))
     async def market_order(self, ctx: Context, *, search: str) -> None:
-        def __build_embed_section(title: str, sorted_df: pd.DataFrame) -> str:
+        def __build_embed_section(title: str, sorted_df: pd.DataFrame) -> (str, str):
             bold_title = f"**{title}**"
-            user = sorted_df["user"]
-            attributes = "\n".join(
-                f"{y[0]}: {y[1]}"
-                for y in [["User", user["ingame_name"]]]
-                + [[x, sorted_df[x]] for x in ["platinum", "quantity", "user_reputation"]]
-            )
+            user_ingame_name = sorted_df["user_ingame_name"]
+            quantity = sorted_df["quantity"]
+            platinum = sorted_df["platinum"]
 
-            output = f"{bold_title}\n```{attributes}```"
-
-            return output
+            return f"{bold_title}", f"{quantity} for {platinum} platinum by {user_ingame_name}"
 
         if not len(self.items):
             async with ctx.typing():
@@ -204,20 +199,25 @@ class Market(Cog):
         df = pd.DataFrame(item_orders)
 
         df["user_reputation"] = df["user"].apply(lambda x: x["reputation"])
+        df["user_ingame_name"] = df["user"].apply(lambda x: x["ingame_name"])
 
         sorted_dfs = [
-            ["Lowest overall platinum", df.sort_values(by="platinum", ascending=True)],
             [
-                "Highest reputation, lowest platinum",
-                df.sort_values(by=["platinum", "user_reputation"], ascending=[True, False]),
+                "Cheapest",
+                df.sort_values(by=["platinum", "user_reputation"], ascending=[True, True]).iloc[0],
             ],
             [
-                "Lowest reputation, lowest platinum",
-                df.sort_values(by=["platinum", "user_reputation"], ascending=[True, True]),
+                "Highest reputation",
+                df.sort_values(by=["platinum", "user_reputation"], ascending=[True, False]).iloc[0],
             ],
         ]
 
-        raw_embed = "\n\n".join(__build_embed_section(x[0], x[1].iloc[0]) for x in sorted_dfs)
+        raw_embeds = [__build_embed_section(x[0], x[1]) for x in sorted_dfs]
+
+        if raw_embeds[0][1] == raw_embeds[1][1]:
+            raw_embeds = [("**Cheapest, highest reputation**", raw_embeds[0][1])]
+
+        raw_embed = "\n\n".join(f"{x[0]}\n{x[1]}" for x in raw_embeds)
 
         item_name = " ".join(f"{x[0].upper()}{x[1:]}" for x in item.item_name.split("_"))
 
