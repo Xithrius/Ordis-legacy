@@ -1,4 +1,6 @@
 from asyncio import to_thread
+from collections.abc import Awaitable, Callable
+from functools import wraps
 from typing import Any
 
 import pandas as pd
@@ -120,36 +122,39 @@ class MarketView(View):
         )
 
 
+def order_interaction(action: str) -> Callable[[], Awaitable[None]]:
+    def decorator(func: Callable[[], Awaitable[None]]) -> Callable[[], Awaitable[None]]:
+        @wraps(func)
+        async def wrapper(self: MarketView, interaction: Interaction, button: Button) -> None:
+            rank = ""
+            if (rank_level := self.item.mod_rank) is not None:
+                rank = f" (rank {rank_level})"
+
+            msg = (
+                f'/w {self.item.user_ingame_name} Hi! I want to {action}: "{self.name}{rank}" '
+                f"for {self.item.platinum} platinum. (warframe.market)"
+            )
+
+            await interaction.response.send_message(f"```{msg}```", ephemeral=True)
+            self.stop()
+
+        return wrapper
+
+    return decorator
+
+
 class MarketViewBuyInteraction(MarketView):
     @button(label="Buy", style=ButtonStyle.green)
+    @order_interaction(action="buy")
     async def buy(self, interaction: Interaction, button: Button) -> None:
-        rank = ""
-        if (rank_level := self.item.mod_rank) is not None:
-            rank = f" (rank {rank_level})"
-
-        msg = (
-            f'/w {self.item.user_ingame_name} Hi! I want to buy: "{self.name}{rank}" '
-            f"for {self.item.platinum} platinum. (warframe.market)"
-        )
-
-        await interaction.response.send_message(f"```{msg}```", ephemeral=True)
-        self.stop()
+        pass
 
 
 class MarketViewSellInteraction(MarketView):
     @button(label="Sell", style=ButtonStyle.green)
+    @order_interaction(action="sell")
     async def buy(self, interaction: Interaction, button: Button) -> None:
-        rank = ""
-        if (rank_level := self.item.mod_rank) is not None:
-            rank = f" (rank {rank_level})"
-
-        msg = (
-            f'/w {self.item.user_ingame_name} Hi! I want to sell: "{self.name}{rank}" '
-            f"for {self.item.platinum} platinum. (warframe.market)"
-        )
-
-        await interaction.response.send_message(f"```{msg}```", ephemeral=True)
-        self.stop()
+        pass
 
 
 class Market(Cog):
