@@ -2,8 +2,9 @@ from asyncio import to_thread
 from typing import Any
 
 import pandas as pd
-from discord import Embed
+from discord import ButtonStyle, Embed, Interaction
 from discord.ext.commands import Cog, Context, group
+from discord.ui import Button, View, button
 from loguru import logger as log
 from pydantic import BaseModel
 from rapidfuzz import fuzz
@@ -24,17 +25,26 @@ class MarketUser(BaseModel):
     status: str
 
 
-class MarketOrder(BaseModel):
+class MarketOrderBase(BaseModel):
     quantity: int
     platinum: int
     visible: bool
     order_type: str
-    user: MarketUser
     platform: str
     creation_date: str
     last_update: str
     id: str
     region: str
+
+
+class MarketOrderWithUser(MarketOrderBase):
+    user: MarketUser
+
+
+class MarketOrderWithCombinedUser(MarketOrderBase):
+    user_reputation: int
+    user_ingame_name: str
+    mod_rank: int | None = None
 
 
 class MarketItem(BaseModel):
@@ -92,6 +102,54 @@ class MarketSetMod(BaseModel):
 class MarketSet(BaseModel):
     id: str
     items_in_set: list[MarketSetWarframeOrItem | MarketSetMod]
+
+
+class MarketView(View):
+    def __init__(self, url_name: str, name: str, item: MarketOrderWithCombinedUser) -> None:
+        super().__init__()
+
+        self.url = url_name
+        self.name = name
+        self.item = item
+
+        self.add_item(
+            Button(
+                label="View on warframe.market",
+                url=f"https://warframe.market/items/{url_name}",
+            ),
+        )
+
+
+class MarketViewBuyInteraction(MarketView):
+    @button(label="Buy", style=ButtonStyle.green)
+    async def buy(self, interaction: Interaction, button: Button) -> None:
+        rank = ""
+        if (rank_level := self.item.mod_rank) is not None:
+            rank = f" (rank {rank_level})"
+
+        msg = (
+            f'/w {self.item.user_ingame_name} Hi! I want to buy: "{self.name}{rank}" '
+            f"for {self.item.platinum} platinum. (warframe.market)"
+        )
+
+        await interaction.response.send_message(f"```{msg}```", ephemeral=True)
+        self.stop()
+
+
+class MarketViewSellInteraction(MarketView):
+    @button(label="Sell", style=ButtonStyle.green)
+    async def buy(self, interaction: Interaction, button: Button) -> None:
+        rank = ""
+        if (rank_level := self.item.mod_rank) is not None:
+            rank = f" (rank {rank_level})"
+
+        msg = (
+            f'/w {self.item.user_ingame_name} Hi! I want to sell: "{self.name}{rank}" '
+            f"for {self.item.platinum} platinum. (warframe.market)"
+        )
+
+        await interaction.response.send_message(f"```{msg}```", ephemeral=True)
+        self.stop()
 
 
 class Market(Cog):
@@ -178,15 +236,16 @@ class Market(Cog):
 
         #     await ctx.send(embed=embed)
 
-    @market.command(aliases=("order", "buy", "sell"))
-    async def market_order(self, ctx: Context, *, search: str) -> None:
-        def __build_embed_section(title: str, sorted_df: pd.DataFrame) -> (str, str):
-            bold_title = f"**{title}**"
-            user_ingame_name = sorted_df["user_ingame_name"]
-            quantity = sorted_df["quantity"]
-            platinum = sorted_df["platinum"]
+    @market.command(aliases=("order",))
+    async def market_order(self, ctx: Context, order_type: str, *, search: str) -> None:
+        def __build_embed_section(item: MarketOrderWithCombinedUser) -> str:
+            ign, rep, quantity, platinum = item.user_ingame_name, item.user_reputation, item.quantity, item.platinum
+            action = "buying" if order_type == "buyers" else "selling"
 
-            return f"{bold_title}", f"{quantity} for {platinum} platinum by {user_ingame_name}"
+            return f"{ign} (+{rep}) is {action} **{quantity}** for **{platinum}** platinum"
+
+        if order_type not in ("buyers", "sellers"):
+            raise ValueError(f"Order type '{order_type}' is not of 'buyers' or 'sellers'.")
 
         if not len(self.items):
             async with ctx.typing():
@@ -197,27 +256,17 @@ class Market(Cog):
         item_orders = await self.get_market_order(item.url_name)
 
         df = pd.DataFrame(item_orders)
+        filter_orders = "buy" if order_type == "buyers" else "sell"
+        df = df[df["order_type"] == filter_orders]
 
         df["user_reputation"] = df["user"].apply(lambda x: x["reputation"])
         df["user_ingame_name"] = df["user"].apply(lambda x: x["ingame_name"])
 
-        sorted_dfs = [
-            [
-                "Cheapest",
-                df.sort_values(by=["platinum", "user_reputation"], ascending=[True, True]).iloc[0],
-            ],
-            [
-                "Highest reputation",
-                df.sort_values(by=["platinum", "user_reputation"], ascending=[True, False]).iloc[0],
-            ],
-        ]
+        filtered_item = MarketOrderWithCombinedUser(
+            **df.sort_values(by=["platinum", "user_reputation"], ascending=[True, True]).iloc[0].to_dict(),
+        )
 
-        raw_embeds = [__build_embed_section(x[0], x[1]) for x in sorted_dfs]
-
-        if raw_embeds[0][1] == raw_embeds[1][1]:
-            raw_embeds = [("**Cheapest, highest reputation**", raw_embeds[0][1])]
-
-        raw_embed = "\n\n".join(f"{x[0]}\n{x[1]}" for x in raw_embeds)
+        raw_embed = __build_embed_section(filtered_item)
 
         item_name = " ".join(f"{x[0].upper()}{x[1:]}" for x in item.item_name.split("_"))
 
@@ -225,7 +274,13 @@ class Market(Cog):
 
         embed.set_thumbnail(url=f"{BASE_ASSETS_URL}/{item.thumb}")
 
-        await ctx.send(embed=embed)
+        market_interaction = (
+            MarketViewBuyInteraction if filtered_item.order_type == "sell" else MarketViewSellInteraction
+        )
+        view = market_interaction(item.url_name, item_name, filtered_item)
+
+        await ctx.send(embed=embed, view=view)
+        await view.wait()
 
 
 async def setup(bot: Ordis) -> None:
