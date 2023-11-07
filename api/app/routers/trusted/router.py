@@ -9,7 +9,7 @@ from app.database.models.trusted import TrustedModel
 
 from .schemas import Trusted, TrustedCreate
 
-router = APIRouter()
+router = APIRouter(prefix="/trusted")
 
 
 @router.get(
