@@ -153,7 +153,7 @@ class MarketViewBuyInteraction(MarketView):
 class MarketViewSellInteraction(MarketView):
     @button(label="Sell", style=ButtonStyle.green)
     @order_interaction(action="sell")
-    async def buy(self, interaction: Interaction, button: Button) -> None:
+    async def sell(self, interaction: Interaction, button: Button) -> None:
         pass
 
 
