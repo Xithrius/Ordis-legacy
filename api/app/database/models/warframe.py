@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-import uuid
-
-from sqlalchemy import BigInteger, ForeignKey, Integer, PrimaryKeyConstraint, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import BigInteger, ForeignKey, Integer, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -12,12 +9,7 @@ from app.database.base import Base
 class WarframeItemModel(Base):
     __tablename__ = "warframe_items"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default_factory=uuid.uuid4,
-        init=False,
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
 
     thumb: Mapped[str] = mapped_column(Text, nullable=False)
     item_name: Mapped[str] = mapped_column(Text, nullable=False)
@@ -27,12 +19,7 @@ class WarframeItemModel(Base):
 class WarframeMarketOrderModel(Base):
     __tablename__ = "warframe_market_orders"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        default_factory=uuid.uuid4,
-        init=False,
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
 
     item_name: Mapped[str] = mapped_column(Text, nullable=False)
     url_name: Mapped[str] = mapped_column(Text, nullable=False)
@@ -45,12 +32,10 @@ class WarframeMarketOrderModel(Base):
 class WarframeMarketTrackingOrderModel(Base):
     __tablename__ = "warframe_market_tracked_orders"
 
-    __table_args__ = (PrimaryKeyConstraint("item_id"),)
+    item_id: Mapped[int] = mapped_column(ForeignKey("warframe_items.id"), nullable=False, primary_key=True)
 
-    item_id = mapped_column(ForeignKey("item.id"), nullable=False)
-
-    user_id = mapped_column(BigInteger, nullable=False)
+    user_id: Mapped[BigInteger] = mapped_column(BigInteger, nullable=False)
     platinum: Mapped[int] = mapped_column(Integer, nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    item = relationship(WarframeItemModel, lazy="joined")
+    item: Mapped[WarframeItemModel] = relationship("WarframeItemModel", lazy="joined")
