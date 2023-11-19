@@ -55,10 +55,12 @@ class Ordis(Bot):
         )
 
     async def setup_hook(self) -> None:
-        self.api = AsyncClient(getenv("API_URL", "http://localhost:8000"))
+        self.api = AsyncClient(
+            base_url=getenv("API_URL", "http://localhost:8000"),
+        )
 
         self.warframe_status_api = AsyncClient(
-            base_url="https://docs.warframestat.us/pc/",
+            base_url="https://api.warframestat.us/pc/",
             params={"language": "en"},
         )
         self.warframe_market_api = AsyncClient(
