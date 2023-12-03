@@ -187,7 +187,7 @@ class Market(Cog):
         if not r.is_success:
             return None
 
-        return r.json()
+        return MarketItem(**r.json())
 
     async def process_items_in_set(self, item_url: str) -> MarketSet:
         r = await self.bot.warframe_market_api.get(

@@ -76,8 +76,8 @@ async def get_item_by_fuzzy(
     stmt = select(WarframeItemModel).where(
         or_(
             func.similarity(WarframeItemModel.item_name, search) > threshold,
-            func.similarity(WarframeItemModel.url_name, search) > threshold
-        )
+            func.similarity(WarframeItemModel.url_name, search) > threshold,
+        ),
     )
 
     items = await session.execute(stmt)
