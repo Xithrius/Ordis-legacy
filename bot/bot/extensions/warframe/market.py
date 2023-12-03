@@ -1,4 +1,3 @@
-from asyncio import to_thread
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import Any
@@ -9,7 +8,6 @@ from discord.ext.commands import Cog, Context, group
 from discord.ui import Button, View, button
 from loguru import logger as log
 from pydantic import BaseModel
-from rapidfuzz import fuzz
 
 from bot.bot import Ordis
 
@@ -160,38 +158,36 @@ class MarketViewSellInteraction(MarketView):
 class Market(Cog):
     def __init__(self, bot: Ordis):
         self.bot = bot
-        self.items: list[MarketItem] = []
+        self.synced = False
+
+        self.items_sync_task = self.bot.loop.create_task(self.populate_items_cache())
+
+    def cog_unload(self) -> None:
+        self.items_sync_task.cancel()
 
     async def populate_items_cache(self) -> None:
-        log.info("Item cache is empty. Populating...")
+        await self.bot.wait_until_ready()
 
-        r = await self.bot.warframe_market_api.get(
-            "/items",
-        )
+        log.info("Syncing item cache...")
 
-        data = r.json()
+        r = await self.bot.api.get("/warframe/items/sync")
 
-        items = data["payload"]["items"]
+        if not r.is_success:
+            log.info(f"Item database failed to sync: {r.text}.")
 
-        self.items = [MarketItem(**item) for item in items]
+        new = r.json()["new"]
 
-        log.info(f"Item cache populated with {len(self.items)} item(s).")
+        log.info(f"Item database synced successfully with {new} new item(s).")
 
-    def fuzzy_find_key(self, search: str) -> MarketItem:
-        best_match: MarketItem | None = None
-        best_score = 0
+        self.synced = True
 
-        for item in self.items:
-            similarity_score = fuzz.WRatio(search, item.item_name)
+    async def fuzzy_find_key(self, search: str) -> MarketItem | None:
+        r = await self.bot.api.get(f"/warframe/items/find?search={search}")
 
-            if similarity_score > best_score:
-                best_score = similarity_score
-                best_match = item
+        if not r.is_success:
+            return None
 
-                if similarity_score == 100.0:
-                    break
-
-        return best_match
+        return r.json()
 
     async def process_items_in_set(self, item_url: str) -> MarketSet:
         r = await self.bot.warframe_market_api.get(
@@ -223,11 +219,12 @@ class Market(Cog):
 
     @market.command(aliases=("item",))
     async def market_item(self, ctx: Context, *, search: str) -> None:
-        if not len(self.items):
-            async with ctx.typing():
-                await self.populate_items_cache()
+        if not self.synced:
+            ctx.reply("Items database is syncing. Please try again later.")
 
-        item = await to_thread(self.fuzzy_find_key, search)
+            return
+
+        item = await self.fuzzy_find_key(search)
 
         item_set = await self.process_items_in_set(item.url_name)
 
@@ -252,11 +249,12 @@ class Market(Cog):
         if order_type not in ("buyers", "sellers"):
             raise ValueError(f"Order type '{order_type}' is not of 'buyers' or 'sellers'.")
 
-        if not len(self.items):
-            async with ctx.typing():
-                await self.populate_items_cache()
+        if not self.synced:
+            ctx.reply("Items database is syncing. Please try again later.")
 
-        item = await to_thread(self.fuzzy_find_key, search)
+            return
+
+        item = await self.fuzzy_find_key(search)
 
         item_orders = await self.get_market_order(item.url_name)
 

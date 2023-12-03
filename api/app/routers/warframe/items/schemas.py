@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class ItemsSyncResponse(BaseModel):
-    response: str
+    new: int
 
 
 class WarframeItemResponse(BaseModel):

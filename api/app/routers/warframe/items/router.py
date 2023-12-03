@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from httpx import AsyncClient
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,11 +21,11 @@ warframe_market_api = AsyncClient(
 
 @router.get(
     "/sync",
-    response_description="Syncing all items in Warframe with the database",
+    description="Syncing all items in Warframe with the database",
     response_model=ItemsSyncResponse,
     status_code=status.HTTP_200_OK,
 )
-async def sync_item(
+async def sync_items(
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> ItemsSyncResponse:
     r = await warframe_market_api.get("/items")
@@ -41,12 +41,12 @@ async def sync_item(
 
     rows = result.all()
 
-    return ItemsSyncResponse(response=f"Populated cache with {len(rows)} item(s).")
+    return {"new": len(rows)}
 
 
 @router.get(
     "/all",
-    response_description="All the items that currently exist",
+    description="All the items that currently exist",
     response_model=list[WarframeItemResponse],
     status_code=status.HTTP_200_OK,
 )
@@ -63,12 +63,41 @@ async def get_all_items(
 
 
 @router.get(
-    "/{item_id}",
+    "/find",
+    description="Fuzzy find an item by name",
     response_model=WarframeItemResponse,
-    response_description="A specific Warframe item",
     status_code=status.HTTP_200_OK,
 )
-async def get_trusted_user(
+async def get_item_by_fuzzy(
+    session: Annotated[AsyncSession, Depends(get_db_session)],
+    search: str,
+    threshold: float | None = 0.8,
+) -> WarframeItemModel:
+    stmt = select(WarframeItemModel).where(
+        or_(
+            func.similarity(WarframeItemModel.item_name, search) > threshold,
+            func.similarity(WarframeItemModel.url_name, search) > threshold
+        )
+    )
+
+    items = await session.execute(stmt)
+
+    if (item := items.scalar_one_or_none()) is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            f"Item {search} could not be found",
+        )
+
+    return item
+
+
+@router.get(
+    "/{item_id}",
+    description="Get a specific warframe item",
+    response_model=WarframeItemResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_item(
     session: Annotated[AsyncSession, Depends(get_db_session)],
     item_id: str,
 ) -> WarframeItemModel:
