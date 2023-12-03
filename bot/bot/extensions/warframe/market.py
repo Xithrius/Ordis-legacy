@@ -220,11 +220,14 @@ class Market(Cog):
     @market.command(aliases=("item",))
     async def market_item(self, ctx: Context, *, search: str) -> None:
         if not self.synced:
-            ctx.reply("Items database is syncing. Please try again later.")
+            await ctx.send("Items database is syncing. Please try again later.")
 
             return
 
-        item = await self.fuzzy_find_key(search)
+        if (item := await self.fuzzy_find_key(search.lower())) is None:
+            await ctx.send(f"Item '{search}' could not be found.")
+
+            return
 
         item_set = await self.process_items_in_set(item.url_name)
 
@@ -254,7 +257,10 @@ class Market(Cog):
 
             return
 
-        item = await self.fuzzy_find_key(search)
+        if (item := await self.fuzzy_find_key(search.lower())) is None:
+            await ctx.send(f"Item '{search}' could not be found.")
+
+            return
 
         item_orders = await self.get_market_order(item.url_name)
 

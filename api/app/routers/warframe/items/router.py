@@ -71,7 +71,7 @@ async def get_all_items(
 async def get_item_by_fuzzy(
     session: Annotated[AsyncSession, Depends(get_db_session)],
     search: str,
-    threshold: float | None = 0.8,
+    threshold: float | None = 0.7,
 ) -> WarframeItemModel:
     stmt = select(WarframeItemModel).where(
         or_(
