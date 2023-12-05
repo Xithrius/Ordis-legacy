@@ -5,7 +5,7 @@
 groups = ["default", "precommit", "test"]
 strategy = ["cross_platform"]
 lock_version = "4.4"
-content_hash = "sha256:06091a8fa9ba4e0b6dee7fb7302e525e53df6742ad02ca7e8f3aef0816113062"
+content_hash = "sha256:0a45dad5304ebd10cbd8d2b3e44910fef443ef85e45cf1e9f69b28bbcf58b901"
 
 [[package]]
 name = "alembic"
