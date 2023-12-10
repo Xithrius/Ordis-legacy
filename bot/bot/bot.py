@@ -3,6 +3,7 @@ import inspect
 import pkgutil
 import sys
 import traceback
+import types
 from collections.abc import Iterator
 from os import getenv
 from typing import NoReturn
@@ -13,32 +14,33 @@ from dotenv import load_dotenv
 from httpx import AsyncClient
 from loguru import logger as log
 
-from . import extensions
+from bot import extensions
 
 load_dotenv()
 
 
-def walk_extensions() -> Iterator[str]:
+def ignore_module(module: pkgutil.ModuleInfo) -> bool:
+    return any(name.startswith("_") for name in module.name.split("."))
+
+
+def walk_extensions(module: types.ModuleType) -> Iterator[str]:
     def on_error(name: str) -> NoReturn:
         raise ImportError(name=name)
 
-    for module in pkgutil.walk_packages(
-        extensions.__path__,
-        f"{extensions.__name__}.",
-        onerror=on_error,
-    ):
-        if module.name.rsplit(".", maxsplit=1)[-1].startswith("_"):
+    modules = set()
+
+    for module_info in pkgutil.walk_packages(module.__path__, f"{module.__name__}.", onerror=on_error):
+        if ignore_module(module_info):
             continue
 
-        if module.ispkg:
-            imported = importlib.import_module(module.name)
+        if module_info.ispkg:
+            imported = importlib.import_module(module_info.name)
             if not inspect.isfunction(getattr(imported, "setup", None)):
                 continue
 
-        yield module.name
+        modules.add(module_info.name)
 
-
-EXTENSIONS = frozenset(walk_extensions())
+    return frozenset(modules)
 
 
 class Ordis(Bot):
@@ -68,7 +70,9 @@ class Ordis(Bot):
             headers={"Language": "en"},
         )
 
-        for extension in EXTENSIONS:
+        exts = walk_extensions(extensions)
+
+        for extension in exts:
             await self.load_extension(extension)
 
             ext_name = ".".join(extension.split(".")[-2:])

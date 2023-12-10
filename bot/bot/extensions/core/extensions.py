@@ -1,7 +1,8 @@
-from discord.ext.commands import Cog, ExtensionNotLoaded, group, Context
+from discord.ext.commands import Cog, Context, ExtensionNotLoaded, group
 from loguru import logger as log
 
-from bot.bot import EXTENSIONS, Ordis
+from bot import extensions
+from bot.bot import Ordis, walk_extensions
 from bot.utils import Extension, codeblock, is_trusted
 
 
@@ -29,7 +30,9 @@ class Extensions(Cog):
 
     @extension.command(aliases=("reload", "r"))
     async def reload_extensions(self, ctx: Context) -> None:
-        for extension in EXTENSIONS:
+        exts = walk_extensions(extensions)
+
+        for extension in exts:
             try:
                 await self.bot.reload_extension(extension)
             except ExtensionNotLoaded:
@@ -40,7 +43,7 @@ class Extensions(Cog):
                     exc_info=(type(e), e, e.__traceback__),
                 )
 
-        msg = f"Reloaded {len(EXTENSIONS)} extension(s)."
+        msg = f"Reloaded {len(exts)} extension(s)."
 
         log.info(msg)
 
