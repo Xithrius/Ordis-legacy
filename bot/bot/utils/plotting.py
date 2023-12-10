@@ -5,12 +5,13 @@ from io import BytesIO
 from uuid import uuid4
 
 import numpy as np
+import pandas as pd
+import seaborn as sns
 from discord import Embed, File
 from discord.ext.commands import Context
-from matplotlib import pyplot as plt
+from scipy import stats
 
 warnings.filterwarnings("ignore", category=UserWarning)
-plt.style.use("dark_background")
 
 
 async def send_plot_buffer(ctx: Context, buffer: BytesIO) -> None:
@@ -25,40 +26,47 @@ async def send_plot_buffer(ctx: Context, buffer: BytesIO) -> None:
     await ctx.send(embed=embed, file=file)
 
 
+def remove_outliers(df: pd.DataFrame, key: str) -> pd.DataFrame:
+    """
+    Removes outliers from a dataframe.
+
+    Source: https://stackoverflow.com/a/23202269
+    """
+    return df[np.abs(stats.zscore(df[key])) < 3]
+
+
 async def plot_histogram_2d(
-    data: list[int | float],
+    df: pd.DataFrame,
     *,
     title: str | None = "Cost distribution",
     x_label: str | None = "Value",
     y_label: str | None = "Frequency",
+    include_outliers: bool | None = False,
     ctx: Context | None,
 ) -> BytesIO | None:
-    def __build_histogram_2d() -> BytesIO:
-        # Create a histogram
-        plt.hist(data, bins=30, density=True, alpha=0.7, color="blue")
+    def __build_histogram_2d(data: pd.DataFrame) -> BytesIO:
+        sns.set_theme()
+        svm = sns.histplot(data, kde=True, x=x_label)
 
-        # Fit a normal distribution to the data
-        mu, sigma = np.mean(data), np.std(data)
-        x = np.linspace(min(data), max(data), 100)
-        y = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x - mu) / sigma) ** 2)
+        svm.set_title(title)
 
-        # Plot the fitted normal distribution
-        plt.plot(x, y, color="orange")
-
-        # Set labels and title
-        plt.title(title)
-        plt.xlabel(x_label)
-        plt.ylabel(y_label)
+        svm.set_xlabel(x_label.capitalize())
+        svm.set_ylabel(y_label.capitalize())
 
         buffer = BytesIO()
-        plt.savefig(buffer, format="png")
+        svm.get_figure().savefig(buffer, format="png")
         buffer.seek(0)
 
-        plt.clf()
+        svm.figure.clf()
 
         return buffer
 
-    b = await asyncio.to_thread(partial(__build_histogram_2d))
+    if not include_outliers:
+        df = remove_outliers(df, x_label)
+
+    func = partial(__build_histogram_2d, df)
+
+    b = await asyncio.to_thread(func)
 
     if ctx is None:
         return b

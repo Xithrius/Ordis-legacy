@@ -229,12 +229,14 @@ class Market(Cog):
 
         item_orders = await self.get_market_order(item.url_name)
 
-        costs = [x["platinum"] for x in item_orders]
+        df = pd.DataFrame(item_orders)
+        filter_orders = "buy" if order_type == "buyers" else "sell"
+        df = df[df["order_type"] == filter_orders]
 
         await plot_histogram_2d(
-            costs,
+            df,
             title=f"Cost distribution of {item.item_name}",
-            x_label="Platinum",
+            x_label="platinum",
             ctx=ctx,
         )
 
