@@ -1,6 +1,5 @@
 from collections.abc import Awaitable, Callable
 from functools import wraps
-from typing import Any
 
 import pandas as pd
 from discord import ButtonStyle, Embed, Interaction
@@ -10,93 +9,16 @@ from loguru import logger as log
 from pydantic import BaseModel
 
 from bot.bot import Ordis
+from bot.models import (
+    MarketItem,
+    MarketOrderWithCombinedUser,
+    MarketSetMod,
+    MarketSetWarframeOrItem,
+)
+from bot.utils.plotting import plot_histogram_2d
+
 
 BASE_ASSETS_URL = "https://warframe.market/static/assets"
-
-
-class MarketUser(BaseModel):
-    reputation: int
-    locale: str
-    avatar: str | None = None
-    last_seen: str
-    ingame_name: str
-    id: str
-    region: str
-    status: str
-
-
-class MarketOrderBase(BaseModel):
-    quantity: int
-    platinum: int
-    visible: bool
-    order_type: str
-    platform: str
-    creation_date: str
-    last_update: str
-    id: str
-    region: str
-
-
-class MarketOrderWithUser(MarketOrderBase):
-    user: MarketUser
-
-
-class MarketOrderWithCombinedUser(MarketOrderBase):
-    user_reputation: int
-    user_ingame_name: str
-    mod_rank: int | None = None
-
-
-class MarketItem(BaseModel):
-    item_name: str
-    url_name: str
-    thumb: str
-    id: str
-
-
-class MarketSetItemDescription(BaseModel):
-    item_name: str
-    description: str
-    wiki_link: str
-    thumb: str
-    icon: str
-    drop: list
-
-
-class MarketSetWarframeOrItem(BaseModel):
-    sub_icon: str | None = None
-    trading_tax: int
-    icon: str
-    quantity_for_set: int = None
-    ducats: int | None = None
-    id: str
-    url_name: str
-    tags: list[str]
-    mastery_level: int | None = None
-    icon_format: str
-    set_root: bool | None = None
-    thumb: str
-    en: MarketSetItemDescription
-
-    class Config:
-        extra = "ignore"
-
-
-class MarketSetMod(BaseModel):
-    sub_icon: str | None = None
-    trading_tax: int
-    icon: str
-    rarity: str
-    id: str
-    url_name: str
-    tags: list[str]
-    mod_max_rank: str
-    icon_format: str
-    thumb: str
-    en: Any
-
-    class Config:
-        extra = "ignore"
 
 
 class MarketSet(BaseModel):
@@ -162,7 +84,7 @@ class Market(Cog):
 
         self.items_sync_task = self.bot.loop.create_task(self.populate_items_cache())
 
-    def cog_unload(self) -> None:
+    async def cog_unload(self) -> None:
         self.items_sync_task.cancel()
 
     async def populate_items_cache(self) -> None:
@@ -207,7 +129,6 @@ class Market(Cog):
 
         data = r.json()
 
-        # item_orders = [MarketOrder(**x) for x in data["payload"]["orders"]]
         item_orders = data["payload"]["orders"]
 
         return item_orders
@@ -253,7 +174,7 @@ class Market(Cog):
             raise ValueError(f"Order type '{order_type}' is not of 'buyers' or 'sellers'.")
 
         if not self.synced:
-            ctx.reply("Items database is syncing. Please try again later.")
+            await ctx.reply("Items database is syncing. Please try again later.")
 
             return
 
@@ -290,6 +211,33 @@ class Market(Cog):
 
         await ctx.send(embed=embed, view=view)
         await view.wait()
+
+    @market.command(aliases=("distro",))
+    async def distribution(self, ctx: Context, order_type: str, *, search: str) -> None:
+        if order_type not in ("buyers", "sellers"):
+            raise ValueError(f"Order type '{order_type}' is not of 'buyers' or 'sellers'.")
+
+        if not self.synced:
+            await ctx.reply("Items database is syncing. Please try again later.")
+
+            return
+
+        if (item := await self.fuzzy_find_key(search.lower())) is None:
+            await ctx.send(f"Item '{search}' could not be found.")
+
+            return
+
+        item_orders = await self.get_market_order(item.url_name)
+
+        costs = [x["platinum"] for x in item_orders]
+
+        await plot_histogram_2d(
+            costs,
+            title=f"Cost distribution of {item.item_name}",
+            x_label="Platinum",
+            ctx=ctx,
+        )
+
 
 
 async def setup(bot: Ordis) -> None:
