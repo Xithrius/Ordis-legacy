@@ -8,13 +8,14 @@ from collections.abc import Iterator
 from os import getenv
 from typing import NoReturn
 
-from discord import AllowedMentions, Embed, Intents, Interaction, app_commands
-from discord.ext.commands import Bot, CommandError, Context
+from discord import AllowedMentions, Embed, Intents, Interaction, Message, app_commands
+from discord.ext.commands import Bot, CommandError
 from dotenv import load_dotenv
 from httpx import AsyncClient
 from loguru import logger as log
 
 from bot import extensions
+from bot.context import Context
 
 load_dotenv()
 
@@ -55,6 +56,10 @@ class Ordis(Bot):
             allowed_mentions=AllowedMentions(everyone=False),
             intents=intents,
         )
+
+    async def get_context(self, message: Message, *, cls: Context = Context) -> Context:
+        """Defines the custom context."""
+        return await super().get_context(message, cls=cls)
 
     async def setup_hook(self) -> None:
         self.api = AsyncClient(

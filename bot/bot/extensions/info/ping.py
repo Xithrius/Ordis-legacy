@@ -1,6 +1,7 @@
-from discord.ext.commands import Cog, Context, group
+from discord.ext.commands import Cog, group
 
 from bot.bot import Ordis
+from bot.context import Context
 
 
 class Ping(Cog):

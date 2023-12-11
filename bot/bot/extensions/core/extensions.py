@@ -1,8 +1,9 @@
-from discord.ext.commands import Cog, Context, ExtensionNotLoaded, group
+from discord.ext.commands import Cog, ExtensionNotLoaded, group
 from loguru import logger as log
 
 from bot import extensions
 from bot.bot import Ordis, walk_extensions
+from bot.context import Context
 from bot.utils import Extension, codeblock, is_trusted
 
 

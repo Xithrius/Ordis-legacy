@@ -1,7 +1,8 @@
-from discord.ext.commands import Cog, Context, command
+from discord.ext.commands import Cog, command
 from loguru import logger as log
 
 from bot.bot import Ordis
+from bot.context import Context
 
 
 class Administration(Cog):

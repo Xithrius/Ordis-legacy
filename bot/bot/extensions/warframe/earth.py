@@ -2,9 +2,10 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from discord import Embed
-from discord.ext.commands import Cog, Context, command
+from discord.ext.commands import Cog, command
 
 from bot.bot import Ordis
+from bot.context import Context
 from bot.utils import bold
 
 

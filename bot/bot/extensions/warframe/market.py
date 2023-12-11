@@ -1,9 +1,10 @@
 import pandas as pd
 from discord import Embed
-from discord.ext.commands import Cog, Context, group
+from discord.ext.commands import Cog, group
 from loguru import logger as log
 
 from bot.bot import Ordis
+from bot.context import Context
 from bot.models import MarketItem, MarketOrderWithCombinedUser, MarketSet
 from bot.utils.plotting import plot_histogram_2d
 

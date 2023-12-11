@@ -1,29 +1,15 @@
 import warnings
 from io import BytesIO
-from uuid import uuid4
 
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from discord import Embed, File
 from discord.ext.commands import Context
 from scipy import stats
 
-from bot.utils import to_async
+from bot.utils import send_image_buffer, to_async
 
 warnings.filterwarnings("ignore", category=UserWarning)
-
-
-async def send_image_buffer(ctx: Context, buffer: BytesIO) -> None:
-    embed = Embed()
-
-    file_name = uuid4()
-
-    embed.set_image(url=f"attachment://{file_name}.png")
-
-    file = File(fp=buffer, filename=f"{file_name}.png")
-
-    await ctx.send(embed=embed, file=file)
 
 
 def remove_outliers(df: pd.DataFrame, key: str) -> pd.DataFrame:
