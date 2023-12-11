@@ -1,5 +1,6 @@
 from bot.utils.checks import is_trusted
 from bot.utils.converters import Extension
+from bot.utils.decorators import to_async
 from bot.utils.formatting import bold, codeblock, markdown_link
 
 __all__ = (
@@ -9,4 +10,5 @@ __all__ = (
     "markdown_link",
     "Extension",
     "bold",
+    "to_async",
 )

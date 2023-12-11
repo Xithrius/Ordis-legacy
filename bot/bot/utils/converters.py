@@ -1,6 +1,7 @@
 from discord.ext.commands import Context, Converter
 
-from bot.bot import EXTENSIONS
+from bot import extensions
+from bot.bot import walk_extensions
 
 
 class Extension(Converter):
@@ -10,7 +11,9 @@ class Extension(Converter):
         if "." not in argument:
             argument = f"bot.extensions.{argument}"
 
-        if argument in EXTENSIONS:
+        exts = walk_extensions(extensions)
+
+        if argument in exts:
             return argument
 
         raise ValueError(f"Invalid argument {argument}")
