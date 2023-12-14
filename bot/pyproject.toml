@@ -14,14 +14,13 @@ dependencies = [
     "rapidfuzz>=3.4.0",
     "pydantic>=2.4.2",
     "pandas>=2.1.2",
-    "seaborn>=0.13.0",
-    "scipy>=1.11.4",
+    "seaborn[stats]>=0.13.0",
 ]
 
 [tool]
 [tool.pdm]
 [tool.pdm.dev-dependencies]
-lint-format = ["ruff>=0.1.7"]
+lint-format = ["ruff>=0.1.8"]
 precommit = ["pre-commit>=3.3.3"]
 test = [
     "pytest>=7.4.0",
