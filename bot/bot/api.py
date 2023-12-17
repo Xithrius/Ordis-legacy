@@ -1,46 +1,28 @@
-import json
+from httpx import AsyncClient
 
-from httpx import AsyncClient, Response
+from bot.models.warframe_market import MarketItem
 
 
-class APIClient:
-    def __init__(self, base_url: str) -> None:
-        self.http_client = AsyncClient(base_url=base_url)
+class LocalAPIClient(AsyncClient):
+    async def fuzzy_find_item(self, search: str) -> MarketItem | None:
+        r = await self.get(f"/warframe/items/find?search={search}")
 
-    async def aclose(self) -> None:
-        await self.http_client.aclose()
+        if not r.is_success:
+            return None
 
-    async def request(self, method: str, partial_endpoint: str, **kwargs) -> Response:
-        r: Response = await self.http_client.request(
-            method.upper(),
-            partial_endpoint,
-            **kwargs,
-        )
+        return MarketItem(**r.json())
 
-        r.raise_for_status()
 
-        return r
+class WarframeStatusAPIClient(AsyncClient):
+    ...
 
-    async def get(self, partial_endpoint: str, **kwargs) -> Response:
-        return await self.request(
-            "GET",
-            partial_endpoint,
-            **kwargs,
-        )
 
-    async def post(self, partial_endpoint: str, **kwargs) -> Response:
-        data = kwargs.pop("data")
+class WarframeMarketAPIClient(AsyncClient):
+    async def get_market_item_orders(self, item_url: str) -> list[dict]:
+        r = await self.get(f"/items/{item_url}/orders")
 
-        return await self.request(
-            "POST",
-            partial_endpoint,
-            data=json.dumps(data, default=str),
-            **kwargs,
-        )
+        data = r.json()
 
-    async def delete(self, partial_endpoint: str, **kwargs) -> Response:
-        return await self.request(
-            "DELETE",
-            partial_endpoint,
-            **kwargs,
-        )
+        item_orders = data["payload"]["orders"]
+
+        return item_orders

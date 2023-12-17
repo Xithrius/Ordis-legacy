@@ -1,16 +1,19 @@
-from bot.utils.checks import is_trusted
-from bot.utils.context import send_image_buffer
-from bot.utils.converters import Extension
-from bot.utils.decorators import to_async
-from bot.utils.formatting import bold, codeblock, markdown_link
+from . import dataframes
+from .checks import is_trusted
+from .context import send_image_buffer
+from .converters import Extension
+from .decorators import to_async
+from .formatting import bold, codeblock, markdown_link
+from .plotting import plot_histogram_2d
 
 __all__ = (
-    "is_trusted",
-    "and_join",
-    "codeblock",
-    "markdown_link",
-    "Extension",
-    "bold",
-    "to_async",
-    "send_image_buffer",
+    dataframes,
+    is_trusted,
+    send_image_buffer,
+    Extension,
+    to_async,
+    bold,
+    codeblock,
+    markdown_link,
+    plot_histogram_2d,
 )

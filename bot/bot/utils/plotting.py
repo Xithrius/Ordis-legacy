@@ -1,24 +1,14 @@
 import warnings
 from io import BytesIO
 
-import numpy as np
 import pandas as pd
 import seaborn as sns
 from discord.ext.commands import Context
-from scipy import stats
 
-from bot.utils import send_image_buffer, to_async
+from . import send_image_buffer, to_async
+from .dataframes import remove_outliers
 
 warnings.filterwarnings("ignore", category=UserWarning)
-
-
-def remove_outliers(df: pd.DataFrame, key: str) -> pd.DataFrame:
-    """
-    Removes outliers from a dataframe.
-
-    Source: https://stackoverflow.com/a/23202269
-    """
-    return df[np.abs(stats.zscore(df[key])) < 3]
 
 
 async def plot_histogram_2d(

@@ -5,7 +5,7 @@
 groups = ["default", "precommit", "test"]
 strategy = ["cross_platform"]
 lock_version = "4.4.1"
-content_hash = "sha256:84e19a898e5f37f89de2fd27e2c73c9021c02e58401046e4759d94a99cb6ad5a"
+content_hash = "sha256:0cd272a96b0ce41122a713a45f9852bbd5521baae1143fb9ce122ec1b62c5864"
 
 [[package]]
 name = "aiohttp"

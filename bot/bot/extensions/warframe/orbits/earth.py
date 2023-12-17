@@ -35,9 +35,7 @@ class Earth(Cog):
 
     @command(aliases=("earth",))
     async def earth_info(self, ctx: Context) -> None:
-        r = await self.bot.warframe_status_api.get(
-            "/earthCycle/",
-        )
+        r = await self.bot.warframe_status_api.get("/earthCycle/")
 
         data = EarthState(**r.json())
 

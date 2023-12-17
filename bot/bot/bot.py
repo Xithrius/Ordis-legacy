@@ -4,6 +4,7 @@ import pkgutil
 import sys
 import traceback
 import types
+from asyncio import Task
 from collections.abc import Iterator
 from os import getenv
 from typing import NoReturn
@@ -11,10 +12,10 @@ from typing import NoReturn
 from discord import AllowedMentions, Embed, Intents, Interaction, Message, app_commands
 from discord.ext.commands import Bot, CommandError
 from dotenv import load_dotenv
-from httpx import AsyncClient
 from loguru import logger as log
 
 from bot import extensions
+from bot.api import LocalAPIClient, WarframeMarketAPIClient, WarframeStatusAPIClient
 from bot.context import Context
 
 load_dotenv()
@@ -57,23 +58,41 @@ class Ordis(Bot):
             intents=intents,
         )
 
+        self.database_items_synced: bool = False
+        self.database_items_sync_task: Task | None = None
+
     async def get_context(self, message: Message, *, cls: Context = Context) -> Context:
         """Defines the custom context."""
         return await super().get_context(message, cls=cls)
 
+    async def populate_items_cache(self) -> None:
+        log.info("Syncing item cache...")
+
+        r = await self.api.get("/warframe/items/sync")
+
+        if not r.is_success:
+            log.info(f"Item database failed to sync: {r.text}.")
+
+        new = r.json()["new"]
+
+        log.info(f"Item database synced successfully with {new} new item(s).")
+
+        self.database_items_synced = True
+
     async def setup_hook(self) -> None:
-        self.api = AsyncClient(
+        self.api = LocalAPIClient(
             base_url=getenv("API_URL", "http://localhost:8000/api/"),
         )
-
-        self.warframe_status_api = AsyncClient(
+        self.warframe_status_api = WarframeStatusAPIClient(
             base_url="https://api.warframestat.us/pc/",
             params={"language": "en"},
         )
-        self.warframe_market_api = AsyncClient(
+        self.warframe_market_api = WarframeMarketAPIClient(
             base_url="https://api.warframe.market/v1/",
             headers={"Language": "en"},
         )
+
+        self.database_items_sync_task = self.loop.create_task(self.populate_items_cache())
 
         exts = walk_extensions(extensions)
 
@@ -114,6 +133,8 @@ class Ordis(Bot):
         await super().start(token=token)
 
     async def close(self) -> None:
+        self.database_items_sync_task.cancel()
+
         await self.warframe_status_api.aclose()
         await self.warframe_market_api.aclose()
 
