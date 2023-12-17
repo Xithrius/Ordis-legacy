@@ -1,7 +1,7 @@
 from io import BytesIO
 from uuid import UUID, uuid4
 
-from discord import Embed, File
+from discord import Embed, File, Interaction
 
 from bot.context import Context
 
@@ -20,4 +20,8 @@ async def send_image_buffer(
 
     file = File(fp=buffer, filename=f"{file_name}.png")
 
-    await ctx.send(embed=embed, file=file)
+    if isinstance(ctx, Context):
+        await ctx.send(embed=embed, file=file)
+    elif isinstance(ctx, Interaction):
+        interaction: Interaction = ctx
+        await interaction.response.send_message(embed=embed, file=file)

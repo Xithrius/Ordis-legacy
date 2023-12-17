@@ -29,6 +29,24 @@ class Market(Cog):
 
             return f"{ign} (+{rep}) is {action} **{quantity}** for **{platinum}** platinum"
 
+        async def __filter_best_item() -> (MarketOrderWithCombinedUser, pd.DataFrame):
+            item_orders = await self.bot.warframe_market_api.get_market_item_orders(item.url_name)
+
+            df = pd.DataFrame(item_orders)
+            filter_orders = "buy" if order_type == "buyers" else "sell"
+            df = df[df["order_type"] == filter_orders]
+
+            df["user_reputation"] = df["user"].apply(lambda x: x["reputation"])
+            df["user_ingame_name"] = df["user"].apply(lambda x: x["ingame_name"])
+
+            filtered_item = MarketOrderWithCombinedUser(
+                **df.sort_values(by=["platinum", "user_reputation"], ascending=[True, True]).iloc[0].to_dict(),
+            )
+
+            return filtered_item, df
+
+        await ctx.typing()
+
         if order_type not in ("buyers", "sellers"):
             raise ValueError(f"Order type '{order_type}' is not of 'buyers' or 'sellers'.")
 
@@ -42,20 +60,11 @@ class Market(Cog):
 
             return
 
-        item_orders = await self.bot.warframe_market_api.get_market_item_orders(item.url_name)
+        best_item, df = await __filter_best_item()
 
-        df = pd.DataFrame(item_orders)
-        filter_orders = "buy" if order_type == "buyers" else "sell"
-        df = df[df["order_type"] == filter_orders]
+        best_item: MarketOrderWithCombinedUser = best_item
 
-        df["user_reputation"] = df["user"].apply(lambda x: x["reputation"])
-        df["user_ingame_name"] = df["user"].apply(lambda x: x["ingame_name"])
-
-        filtered_item = MarketOrderWithCombinedUser(
-            **df.sort_values(by=["platinum", "user_reputation"], ascending=[True, True]).iloc[0].to_dict(),
-        )
-
-        raw_embed = __build_embed_section(filtered_item)
+        raw_embed = __build_embed_section(best_item)
 
         item_name = " ".join(f"{x[0].upper()}{x[1:]}" for x in item.item_name.split("_"))
 
@@ -64,9 +73,9 @@ class Market(Cog):
         embed.set_thumbnail(url=f"{BASE_ASSETS_URL}/{item.thumb}")
 
         market_interaction = (
-            MarketViewBuyInteraction if filtered_item.order_type == "sell" else MarketViewSellInteraction
+            MarketViewBuyInteraction if best_item.order_type == "sell" else MarketViewSellInteraction
         )
-        view = market_interaction(item.url_name, item_name, filtered_item)
+        view = market_interaction(df, item.url_name, item_name, best_item)
 
         await ctx.send(embed=embed, view=view)
         await view.wait()

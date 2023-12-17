@@ -1,25 +1,43 @@
 from collections.abc import Awaitable, Callable
 from functools import wraps
 
+import pandas as pd
 from discord import ButtonStyle, Interaction
 from discord.ui import Button, View, button
 
-from bot.models.warframe_market import MarketOrderWithCombinedUser
+from bot.models import MarketOrderWithCombinedUser
+from bot.utils import plot_histogram_2d
 
 
 class MarketView(View):
-    def __init__(self, url_name: str, name: str, item: MarketOrderWithCombinedUser) -> None:
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        url_name: str,
+        name: str,
+        item: MarketOrderWithCombinedUser,
+    ) -> None:
         super().__init__()
 
+        self.df = df
         self.url = url_name
         self.name = name
         self.item = item
 
         self.add_item(
             Button(
-                label="View on warframe.market",
+                label="warframe.market",
                 url=f"https://warframe.market/items/{url_name}",
             ),
+        )
+
+    @button(label="Cost distribution", style=ButtonStyle.blurple)
+    async def receive(self, interaction: Interaction, button: Button) -> None:
+        await plot_histogram_2d(
+            self.df,
+            title=f"Cost distribution of {self.name}",
+            x_label="platinum",
+            ctx=interaction,
         )
 
 
