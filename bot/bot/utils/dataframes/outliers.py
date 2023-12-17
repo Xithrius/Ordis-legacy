@@ -5,7 +5,7 @@ from scipy.stats import zscore
 
 
 def remove_outliers(df: pd.DataFrame, key: str) -> pd.DataFrame:
-    desired_zscore_threshold = 3
+    desired_zscore_threshold = 4
 
     while True:
         # Calculate the z-scores

@@ -5,7 +5,6 @@ import pandas as pd
 import seaborn as sns
 from discord import Interaction
 from discord.ext.commands import Context
-from loguru import logger as log
 
 from . import send_image_buffer, to_async
 from .dataframes import remove_outliers
@@ -41,12 +40,8 @@ async def plot_histogram_2d(
 
         return buffer
 
-    log.info(len(df))
-
     if not include_outliers:
         df = remove_outliers(df, x_label)
-
-    log.info(len(df))
 
     b = await __build_histogram_2d(df)
 

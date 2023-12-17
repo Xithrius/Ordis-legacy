@@ -10,7 +10,7 @@ from os import getenv
 from typing import NoReturn
 
 from discord import AllowedMentions, Embed, Intents, Interaction, Message, app_commands
-from discord.ext.commands import Bot, CommandError
+from discord.ext.commands import Bot, CommandError, when_mentioned_or
 from dotenv import load_dotenv
 from loguru import logger as log
 
@@ -52,7 +52,7 @@ class Ordis(Bot):
         intents.message_content = True
 
         super().__init__(
-            command_prefix=";;;",
+            command_prefix=when_mentioned_or(";"),
             case_insensitive=True,
             allowed_mentions=AllowedMentions(everyone=False),
             intents=intents,

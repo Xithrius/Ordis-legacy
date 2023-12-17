@@ -3,6 +3,7 @@ from loguru import logger as log
 
 from bot.bot import Ordis
 from bot.context import Context
+from bot.utils import is_trusted
 
 
 class Administration(Cog):
@@ -10,6 +11,7 @@ class Administration(Cog):
         self.bot = bot
 
     @command(alias=("logout",))
+    @is_trusted()
     async def shutdown(self, ctx: Context) -> None:
         log.info("Logging out...")
 
