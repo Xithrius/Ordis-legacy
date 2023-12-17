@@ -8,7 +8,6 @@ from discord.ext.commands import Context
 
 from . import send_image_buffer, to_async
 from .dataframes import remove_outliers
-from .dataframes.calculate_bins import freedman_diaconis_rule
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -25,7 +24,7 @@ async def plot_histogram_2d(
     @to_async
     def __build_histogram_2d(data: pd.DataFrame) -> BytesIO:
         sns.set_theme()
-        svm = sns.histplot(data, x=x_label, kde=True, bins=freedman_diaconis_rule(data[x_label]))
+        svm = sns.histplot(data, x=x_label, kde=True)
 
         svm.set_title(title)
 
