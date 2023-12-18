@@ -22,6 +22,7 @@ dependencies = [
     "loguru>=0.7.2",
     "prometheus-client>=0.17.1",
     "prometheus-fastapi-instrumentator>=6.1.0",
+    "testcontainers[postgres]>=3.7.1",
 ]
 
 [tool]
@@ -35,6 +36,7 @@ test = [
     "pytest-cov>=4.1.0",
     "pytest-env>=1.0.1",
     "pytest-xdist>=3.3.1",
+    "psycopg2-binary>=2.9.9",
 ]
 
 [tool.pdm.scripts]
