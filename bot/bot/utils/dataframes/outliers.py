@@ -3,10 +3,15 @@ from scipy.stats import zscore
 
 # https://stackoverflow.com/a/23202269
 
+ZSCORE_LIMIT = 4
 
-def remove_outliers(df: pd.DataFrame, key: str) -> pd.DataFrame:
-    desired_zscore_threshold = 4
 
+def remove_outliers(
+    df: pd.DataFrame,
+    key: str,
+    *,
+    zscore_threshold: int | None = ZSCORE_LIMIT,
+) -> pd.DataFrame:
     while True:
         # Calculate the z-scores
         z_scores = zscore(df[key])
@@ -14,7 +19,7 @@ def remove_outliers(df: pd.DataFrame, key: str) -> pd.DataFrame:
         # Check if all z-scores are NaN
         if pd.notna(z_scores).any():
             # Identify outliers using the z-scores
-            outliers_mask = abs(z_scores) <= desired_zscore_threshold
+            outliers_mask = abs(z_scores) <= zscore_threshold
 
             # Filter the DataFrame to exclude outliers
             df_filtered = df[outliers_mask]
