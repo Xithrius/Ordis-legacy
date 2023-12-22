@@ -3,6 +3,15 @@ import pandas as pd
 from bot.utils.dataframes.outliers import remove_outliers
 
 
+def test_remove_no_outliers_from_small_array() -> None:
+    data = {"amount": list(range(1, 11))}
+    df = pd.DataFrame(data)
+
+    df_filtered = remove_outliers(df, "amount", zscore_threshold=3)
+
+    assert len(df_filtered) == 10
+
+
 def test_remove_one_outlier_small_array() -> None:
     data = {"amount": list(range(1, 11)) + [100]}
     df = pd.DataFrame(data)

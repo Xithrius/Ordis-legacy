@@ -6,7 +6,7 @@ from discord import ButtonStyle, Interaction
 from discord.ui import Button, View, button
 
 from bot.models import MarketOrderWithCombinedUser
-from bot.utils import plot_histogram_2d
+from bot.utils import histogram_2d
 
 
 class MarketView(View):
@@ -33,7 +33,7 @@ class MarketView(View):
 
     @button(label="Cost distribution", style=ButtonStyle.blurple)
     async def receive(self, interaction: Interaction, button: Button) -> None:
-        await plot_histogram_2d(
+        await histogram_2d(
             self.df,
             title=f"Cost distribution of {self.name}",
             x_label="platinum",

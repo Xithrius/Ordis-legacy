@@ -5,7 +5,7 @@ from discord.ext.commands import Cog, group
 from bot.bot import Ordis
 from bot.context import Context
 from bot.models import MarketOrderWithCombinedUser
-from bot.utils import plot_histogram_2d
+from bot.utils import barplot_2d
 
 from ._ui import MarketViewBuyInteraction, MarketViewSellInteraction
 
@@ -72,9 +72,7 @@ class Market(Cog):
 
         embed.set_thumbnail(url=f"{BASE_ASSETS_URL}/{item.thumb}")
 
-        market_interaction = (
-            MarketViewBuyInteraction if best_item.order_type == "sell" else MarketViewSellInteraction
-        )
+        market_interaction = MarketViewBuyInteraction if best_item.order_type == "sell" else MarketViewSellInteraction
         view = market_interaction(df, item.url_name, item_name, best_item)
 
         await ctx.send(embed=embed, view=view)
@@ -101,7 +99,7 @@ class Market(Cog):
         filter_orders = "buy" if order_type == "buyers" else "sell"
         df = df[df["order_type"] == filter_orders]
 
-        await plot_histogram_2d(
+        await barplot_2d(
             df,
             title=f"Cost distribution of {item.item_name}",
             x_label="platinum",

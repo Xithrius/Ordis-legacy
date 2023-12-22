@@ -28,9 +28,8 @@ def remove_outliers(
             if len(df_filtered) == len(df):
                 break
 
-            df = df_filtered  # Update the DataFrame for the next iteration
+            df = df_filtered
         else:
-            # If all z-scores are NaN, break out of the loop
             break
 
     return df_filtered

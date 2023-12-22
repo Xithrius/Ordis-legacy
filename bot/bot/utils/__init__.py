@@ -4,7 +4,7 @@ from .context import send_image_buffer
 from .converters import Extension
 from .decorators import to_async
 from .formatting import bold, codeblock, markdown_link
-from .plotting import plot_histogram_2d
+from .plotting import barplot_2d, histogram_2d
 
 __all__ = (
     dataframes,
@@ -15,5 +15,6 @@ __all__ = (
     bold,
     codeblock,
     markdown_link,
-    plot_histogram_2d,
+    barplot_2d,
+    histogram_2d,
 )

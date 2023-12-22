@@ -12,7 +12,7 @@ from .dataframes import remove_outliers
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
-async def plot_histogram_2d(
+async def histogram_2d(
     df: pd.DataFrame,
     *,
     title: str | None = "Value distribution",
@@ -43,6 +43,44 @@ async def plot_histogram_2d(
         df = remove_outliers(df, x_label)
 
     b = await __build_histogram_2d(df)
+
+    if ctx is None:
+        return b
+
+    return await send_image_buffer(b, ctx=ctx)
+
+
+async def barplot_2d(
+    df: pd.DataFrame,
+    *,
+    title: str | None = "Value distribution",
+    x_label: str | None = "value",
+    y_label: str | None = "frequency",
+    include_outliers: bool | None = False,
+    ctx: Context | Interaction | None,
+) -> BytesIO | None:
+    @to_async
+    def __build_barplot_2d(data: pd.DataFrame) -> BytesIO:
+        sns.set_theme()
+        svm = sns.barplot(data, x=x_label)
+
+        svm.set_title(title)
+
+        svm.set_xlabel(x_label.capitalize())
+        svm.set_ylabel(y_label.capitalize())
+
+        buffer = BytesIO()
+        svm.get_figure().savefig(buffer, format="png")
+        buffer.seek(0)
+
+        svm.figure.clf()
+
+        return buffer
+
+    if not include_outliers:
+        df = remove_outliers(df, x_label)
+
+    b = await __build_barplot_2d(df)
 
     if ctx is None:
         return b
