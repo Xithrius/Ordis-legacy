@@ -6,7 +6,7 @@ from discord import ButtonStyle, Interaction
 from discord.ui import Button, View, button
 
 from bot.models import MarketOrderWithCombinedUser
-from bot.utils import barplot_2d, histogram_2d
+from bot.utils import codeblock, histogram_2d
 
 
 class MarketView(View):
@@ -44,37 +44,32 @@ class MarketView(View):
     async def percentiles(self, interaction: Interaction, button: Button) -> None:
         s = self.df["platinum"]
 
-        stats_df = pd.DataFrame(
+        df = pd.DataFrame(
             {
                 "percentiles": [
-                    "Min",
+                    "Minimum",
+                    "Max",
                     "Mean",
                     "Median",
                     "0.95",
                     "0.99",
                     "0.999",
-                    "Max",
                 ],
                 "platinum": [
                     s.min(),
+                    s.max(),
                     s.mean(),
                     s.median(),
                     s.quantile(0.95),
                     s.quantile(0.99),
                     s.quantile(0.999),
-                    s.max(),
                 ],
             },
         )
 
-        await barplot_2d(
-            stats_df,
-            title=f"Percentiles of {self.name}",
-            x_label="percentiles",
-            y_label="platinum",
-            include_outliers=True,
-            ctx=interaction,
-        )
+        block = codeblock(df.to_string(index=False))
+
+        await interaction.response.send_message(block)
 
 
 def order_interaction(action: str) -> Callable[[], Awaitable[None]]:
