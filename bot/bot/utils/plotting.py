@@ -53,16 +53,16 @@ async def histogram_2d(
 async def barplot_2d(
     df: pd.DataFrame,
     *,
-    title: str | None = "Value distribution",
-    x_label: str | None = "value",
-    y_label: str | None = "frequency",
+    title: str | None = "Values",
+    x_label: str | None = "percentiles",
+    y_label: str | None = "amount",
     include_outliers: bool | None = False,
     ctx: Context | Interaction | None,
 ) -> BytesIO | None:
     @to_async
     def __build_barplot_2d(data: pd.DataFrame) -> BytesIO:
         sns.set_theme()
-        svm = sns.barplot(data, x=x_label)
+        svm = sns.barplot(data, x=x_label, y=y_label)
 
         svm.set_title(title)
 
