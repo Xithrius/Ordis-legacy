@@ -4,7 +4,7 @@ def markdown_link(
     link: str,
     desc_wrapper: str = "",
 ) -> str:
-    if not (desc or link):
+    if not desc or not link:
         raise ValueError("Description and link must exist")
     return f"[{desc_wrapper}{desc}{desc_wrapper}]({link})"
 

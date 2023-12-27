@@ -56,13 +56,16 @@ class MarketView(View):
                     "0.999",
                 ],
                 "platinum": [
-                    s.min(),
-                    s.max(),
-                    s.mean(),
-                    s.median(),
-                    s.quantile(0.95),
-                    s.quantile(0.99),
-                    s.quantile(0.999),
+                    round(x, 2)
+                    for x in [
+                        s.min(),
+                        s.max(),
+                        s.mean(),
+                        s.median(),
+                        s.quantile(0.95),
+                        s.quantile(0.99),
+                        s.quantile(0.999),
+                    ]
                 ],
             },
         )
