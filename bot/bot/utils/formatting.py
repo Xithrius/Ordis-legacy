@@ -17,3 +17,16 @@ def codeblock(code: str | list[str], *, language: str | None = None) -> str:
 
 def bold(content: str) -> str:
     return f"**{content}**"
+
+
+def final_join(
+    items: list[str],
+    *,
+    sep: str | None = ", ",
+    final_sep: str | None = "and",
+) -> str:
+    items_length = len(items)
+
+    if items_length <= 1:
+        return "" if items_length == 0 else items[0]
+    return f"{sep.join(str(x) for x in items[:-1])}{sep}{final_sep} {items[-1]}"
