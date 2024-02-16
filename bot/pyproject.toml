@@ -21,8 +21,8 @@ dependencies = [
 [tool]
 [tool.pdm]
 [tool.pdm.dev-dependencies]
-lint-format = ["ruff>=0.1.8"]
-precommit = ["pre-commit>=3.3.3"]
+lint-format = ["ruff>=0.2.1"]
+precommit = ["pre-commit>=3.6.0"]
 test = [
     "pytest>=7.4.0",
     "anyio>=3.7.1",
