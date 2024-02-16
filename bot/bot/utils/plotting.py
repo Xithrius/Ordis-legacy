@@ -6,7 +6,7 @@ import seaborn as sns
 from discord import Interaction
 from discord.ext.commands import Context
 
-from . import send_image_buffer, to_async
+from . import to_async
 from .dataframes import remove_outliers
 
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -47,7 +47,7 @@ async def histogram_2d(
     if ctx is None:
         return b
 
-    return await send_image_buffer(b, ctx=ctx)
+    return await ctx.send_image_buffer(b)
 
 
 async def barplot_2d(
@@ -85,4 +85,4 @@ async def barplot_2d(
     if ctx is None:
         return b
 
-    return await send_image_buffer(b, ctx=ctx)
+    return await ctx.send_image_buffer(b)

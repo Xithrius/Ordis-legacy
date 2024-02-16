@@ -1,9 +1,13 @@
 from collections.abc import Callable
 
-from discord.ext.commands import Context, check
+from discord.ext.commands import CheckFailure, check
 from httpx import Response
 
-from bot.bot import Ordis
+from bot.context import Context
+
+
+class TrustedUserCheckFailure(CheckFailure):
+    """User is not in the trusted database, and therefore cannot run a command."""
 
 
 def is_trusted() -> Callable:
@@ -11,12 +15,16 @@ def is_trusted() -> Callable:
         if await ctx.bot.is_owner(ctx.message.author):
             return True
 
-        bot: Ordis = ctx.bot
-
-        response: Response = await bot.api.get(
-            f"/trusted/{ctx.message.author.id}",
+        response: Response = await ctx.bot.api.get(
+            f"/api/trusted/{ctx.message.author.id}",
         )
 
-        return response.is_success
+        if response.is_success:
+            return True
+
+        if response.status_code == 404:
+            raise TrustedUserCheckFailure
+
+        raise Exception("Issue when requesting to the internal trusted API endpoint")
 
     return check(predicate)

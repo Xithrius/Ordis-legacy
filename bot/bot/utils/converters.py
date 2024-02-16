@@ -1,7 +1,12 @@
-from discord.ext.commands import Context, Converter
+from typing import TYPE_CHECKING
+
+from discord.ext.commands import Converter
 
 from bot import extensions
-from bot.bot import walk_extensions
+from bot.context import Context
+
+if TYPE_CHECKING:
+    from bot.bot import walk_extensions
 
 
 class Extension(Converter):

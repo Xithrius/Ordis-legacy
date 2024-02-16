@@ -87,6 +87,7 @@ class MarketSetMod(BaseModel):
     class Config:
         extra = "ignore"
 
+
 class MarketSet(BaseModel):
     id: str
     items_in_set: list[MarketSetWarframeOrItem | MarketSetMod]
