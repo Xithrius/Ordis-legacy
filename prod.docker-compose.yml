@@ -1,0 +1,69 @@
+version: "3.7"
+
+x-logging: &logging
+  logging:
+    driver: "json-file"
+    options:
+      max-file: "5"
+      max-size: "10m"
+
+x-restart-policy:
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *logging
+
+    image: "ghcr.io/xithrius/ordis/api:latest"
+
+    env_file:
+    - .env
+
+    environment:
+      ORDIS_API_RELOAD: "false"
+      ORDIS_API_DB_HOST: "postgres"
+      ORDIS_API_HOST: "0.0.0.0"
+
+    volumes:
+    - ./api:/api
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    ports:
+    - "8000:8000"
+
+    labels:
+    - "com.centurylinklabs.watchtower.enable=true"
+
+    networks:
+    - database-access
+
+  bot:
+    <<: *logging
+
+    image: "ghcr.io/xithrius/ordis/bot:latest"
+
+    env_file:
+    - .env
+
+    environment:
+      API_URL: "http://api:8000"
+
+    depends_on:
+    - api
+
+    volumes:
+    - ./bot:/bot
+
+    labels:
+    - "com.centurylinklabs.watchtower.enable=true"
+
+networks:
+  database-access:
+    name: database-access
+    external: true
+  ordis:
+    name: ordis
+    external: true
