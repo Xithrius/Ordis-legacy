@@ -20,8 +20,10 @@ class Ordis(Bot):
         intents.members = True
         intents.message_content = True
 
+        command_prefix: str = getenv("BOT_PREFIX", ".")
+
         super().__init__(
-            command_prefix=when_mentioned_or(";"),
+            command_prefix=when_mentioned_or(command_prefix),
             case_insensitive=True,
             allowed_mentions=AllowedMentions(everyone=False),
             intents=intents,
@@ -37,7 +39,7 @@ class Ordis(Bot):
     async def populate_items_cache(self) -> None:
         log.info("Syncing item cache...")
 
-        r = await self.api.get("/warframe/items/sync")
+        r = await self.api.get("/api/warframe/items/sync")
 
         if not r.is_success:
             log.info(f"Item database failed to sync: {r.text}.")
@@ -50,7 +52,7 @@ class Ordis(Bot):
 
     async def setup_hook(self) -> None:
         self.api = LocalAPIClient(
-            base_url=getenv("API_URL", "http://localhost:8000/api/"),
+            base_url=getenv("API_URL", "http://localhost:8000"),
         )
         self.warframe_status_api = WarframeStatusAPIClient(
             base_url="https://api.warframestat.us/pc/",

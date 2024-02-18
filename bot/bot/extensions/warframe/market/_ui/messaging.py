@@ -37,6 +37,7 @@ class MarketView(View):
             self.df,
             title=f"Cost distribution of {self.name}",
             x_label="platinum",
+            y_label="quantity",
             ctx=interaction,
         )
 

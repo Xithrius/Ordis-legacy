@@ -5,7 +5,7 @@ from bot.models.warframe_market import MarketItem
 
 class LocalAPIClient(AsyncClient):
     async def fuzzy_find_item(self, search: str) -> MarketItem | None:
-        r = await self.get(f"/warframe/items/find?search={search}")
+        r = await self.get(f"/api/warframe/items/find?search={search}")
 
         if not r.is_success:
             return None

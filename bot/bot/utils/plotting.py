@@ -4,7 +4,8 @@ from io import BytesIO
 import pandas as pd
 import seaborn as sns
 from discord import Interaction
-from discord.ext.commands import Context
+
+from bot.context import Context, buffer_to_embed_file
 
 from . import to_async
 from .dataframes import remove_outliers
@@ -47,7 +48,16 @@ async def histogram_2d(
     if ctx is None:
         return b
 
-    return await ctx.send_image_buffer(b)
+    if isinstance(ctx, Interaction):
+        embed, file = buffer_to_embed_file(b)
+
+        interaction: Interaction = ctx
+
+        await interaction.response.send_message(embed=embed, file=file)
+    else:
+        await ctx.send_image_buffer(b)
+
+    return None
 
 
 async def barplot_2d(
@@ -85,4 +95,13 @@ async def barplot_2d(
     if ctx is None:
         return b
 
-    return await ctx.send_image_buffer(b)
+    if isinstance(ctx, Interaction):
+        embed, file = buffer_to_embed_file(b)
+
+        interaction: Interaction = ctx
+
+        await interaction.response.send_message(embed=embed, file=file)
+    else:
+        await ctx.send_image_buffer(b)
+
+    return None

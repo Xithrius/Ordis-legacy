@@ -14,8 +14,7 @@ class Extensions(Cog):
     @group(aliases=("extensions", "e"))
     @is_trusted()
     async def extension(self, ctx: Context) -> None:
-        if ctx.invoked_subcommand is None:
-            await ctx.send("Missing subcommand")
+        await ctx.check_subcommands()
 
     @extension.command(aliases=("load",))
     async def load_extension(self, ctx: Context, extension: Extension) -> None:

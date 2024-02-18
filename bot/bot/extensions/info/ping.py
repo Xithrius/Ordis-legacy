@@ -5,13 +5,22 @@ from bot.context import Context
 
 
 class Ping(Cog):
+    """Pinging different things."""
+
     def __init__(self, bot: Ordis):
         self.bot = bot
 
     @group()
     async def ping(self, ctx: Context) -> None:
-        if ctx.invoked_subcommand is None:
-            await ctx.send(":ping_pong: Pong!")
+        """Is this thing on?"""
+        await ctx.check_subcommands()
+
+    @ping.command()
+    async def api(self, ctx: Context) -> None:
+        """Is *that* thing on?"""
+        response = await self.bot.api.get("/api/health")
+
+        await ctx.send("API is healthy" if response.is_success else "API is unhealthy")
 
     @ping.command(aliases=("discord",))
     async def latency(self, ctx: Context) -> None:

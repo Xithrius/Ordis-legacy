@@ -10,6 +10,21 @@ if TYPE_CHECKING:
     from bot.bot import Ordis
 
 
+def buffer_to_embed_file(
+    buffer: BytesIO,
+    embed: Embed | None = None,
+    file_name: str | UUID | None = None,
+) -> tuple[Embed, File]:
+    embed = embed or Embed()
+    file_name = file_name or uuid4()
+
+    embed.set_image(url=f"attachment://{file_name}.png")
+
+    file = File(fp=buffer, filename=f"{file_name}.png")
+
+    return (embed, file)
+
+
 class Context(BaseContext):
     """Definition of a custom context."""
 
@@ -42,11 +57,6 @@ class Context(BaseContext):
         embed: Embed | None = None,
         file_name: str | UUID | None = None,
     ) -> None:
-        embed = embed or Embed()
-        file_name = file_name or uuid4()
-
-        embed.set_image(url=f"attachment://{file_name}.png")
-
-        file = File(fp=buffer, filename=f"{file_name}.png")
+        embed, file = buffer_to_embed_file(buffer, embed, file_name)
 
         await self.send(embed=embed, file=file)

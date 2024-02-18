@@ -18,8 +18,7 @@ class Market(Cog):
 
     @group()
     async def market(self, ctx: Context) -> None:
-        if ctx.invoked_subcommand is None:
-            await ctx.send("Missing subcommand")
+        await ctx.check_subcommands()
 
     @market.command(aliases=("order",))
     async def market_order(self, ctx: Context, order_type: str, *, search: str) -> None:
@@ -29,7 +28,7 @@ class Market(Cog):
 
             return f"{ign} (+{rep}) is {action} **{quantity}** for **{platinum}** platinum"
 
-        async def __filter_best_item() -> (MarketOrderWithCombinedUser, pd.DataFrame):
+        async def __filter_best_item() -> tuple[MarketOrderWithCombinedUser, pd.DataFrame]:
             item_orders = await self.bot.warframe_market_api.get_market_item_orders(item.url_name)
 
             df = pd.DataFrame(item_orders)
@@ -103,6 +102,7 @@ class Market(Cog):
             df,
             title=f"Cost distribution of {item.item_name}",
             x_label="platinum",
+            y_label="quantity",
             ctx=ctx,
         )
 
