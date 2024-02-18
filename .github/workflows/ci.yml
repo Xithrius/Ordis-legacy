@@ -12,11 +12,13 @@ concurrency:
 
 jobs:
   lint-test:
+    name: Lint & test
+
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        directory: ['bot', 'api']
+        directory: ['api', 'bot']
 
     steps:
     - name: Checkout repository
