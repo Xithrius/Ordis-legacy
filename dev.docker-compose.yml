@@ -21,6 +21,11 @@ services:
     env_file:
     - .env
 
+    environment:
+      ORDIS_API_DB_HOST: "postgres"
+      ORDIS_API_HOST: "0.0.0.0"
+      ORDIS_API_OPENTELEMETRY_ENDPOINT: "http://tempo:4317"
+
     volumes:
     - ./api:/api
 
@@ -29,6 +34,7 @@ services:
 
     networks:
     - database-access
+    - api-metrics
     - ordis
 
   bot:
@@ -56,6 +62,9 @@ services:
 networks:
   database-access:
     name: database-access
+    external: true
+  api-metrics:
+    name: api-metrics
     external: true
   ordis:
     name: ordis

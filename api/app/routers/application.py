@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import UJSONResponse
 
 from app.routers import api_router
-from app.routers.lifetime import lifespan
+from app.routers.lifetime import PrometheusMiddleware, lifespan, metrics
 
 
 def get_app() -> FastAPI:
@@ -16,6 +16,9 @@ def get_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    app.include_router(router=api_router, prefix="/api")
+    app.add_middleware(PrometheusMiddleware, app_name="ordis-api")
+    app.add_route("/metrics", metrics)
+
+    app.include_router(router=api_router)
 
     return app
