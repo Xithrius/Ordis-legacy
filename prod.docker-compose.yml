@@ -1,6 +1,6 @@
 version: "3.8"
 
-x-logging: &logging
+x-logging-loki: &logging_loki
   logging:
     driver: loki
     options:
@@ -12,12 +12,19 @@ x-logging: &logging
         - regex:
             expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2},d{3}) (?P<message>(?s:.*))$$'
 
+x-logging-json: &logging_json
+  logging:
+    driver: "json-file"
+    options:
+      max-file: "5"
+      max-size: "10m"
+
 x-restart-policy:
   restart: unless-stopped
 
 services:
   api:
-    <<: *logging
+    <<: *logging_loki
 
     image: "ghcr.io/xithrius/ordis/api:latest"
 
@@ -25,6 +32,7 @@ services:
     - .env
 
     environment:
+      ORDIS_API_ENVIRONMENT: "production"
       ORDIS_API_RELOAD: "false"
       ORDIS_API_DB_HOST: "postgres"
       ORDIS_API_HOST: "0.0.0.0"
@@ -33,19 +41,15 @@ services:
     volumes:
     - ./api:/api
 
-    ports:
-    - "8000:8000"
-
     labels:
     - "com.centurylinklabs.watchtower.enable=true"
 
     networks:
     - database-access
-    - api-metrics
-    - ordis
+    - infra-metrics
 
   bot:
-    <<: *logging
+    <<: *logging_json
 
     image: "ghcr.io/xithrius/ordis/bot:latest"
 
@@ -65,15 +69,12 @@ services:
     - "com.centurylinklabs.watchtower.enable=true"
 
     networks:
-    - ordis
+    - infra-metrics
 
 networks:
   database-access:
     name: database-access
     external: true
-  api-metrics:
-    name: api-metrics
-    external: true
-  ordis:
-    name: ordis
+  infra-metrics:
+    name: infra-metrics
     external: true

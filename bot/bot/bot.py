@@ -13,6 +13,8 @@ from bot.utils import walk_extensions
 
 load_dotenv()
 
+API_HEALTHCHECK_ATTEMPTS = 5
+
 
 class Ordis(Bot):
     def __init__(self) -> None:
@@ -50,10 +52,28 @@ class Ordis(Bot):
 
         self.database_items_synced = True
 
+    @staticmethod
+    async def api_healthcheck(api: LocalAPIClient) -> bool:
+        for i in range(API_HEALTHCHECK_ATTEMPTS):
+            timeout = (i + 1) * 2
+            log.info(f"({i + 1}/10): Attempting to connect to API, timeout of {timeout}...")
+            response = await api.get("/api/health", timeout=timeout)
+
+            if response.is_success:
+                return True
+
+        return False
+
     async def setup_hook(self) -> None:
-        self.api = LocalAPIClient(
-            base_url=getenv("API_URL", "http://localhost:8000"),
-        )
+        api_base_url = getenv("API_URL", "http://localhost:8000")
+
+        log.info(f"Attempting to connect to API at {api_base_url}")
+        self.api = LocalAPIClient(base_url=api_base_url)
+        internal_api_health = await self.api_healthcheck(self.api)
+        if not internal_api_health:
+            log.critical("Attempted to connect to API, but failed. Exiting...")
+            return
+
         self.warframe_status_api = WarframeStatusAPIClient(
             base_url="https://api.warframestat.us/pc/",
             params={"language": "en"},

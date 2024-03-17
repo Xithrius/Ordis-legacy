@@ -1,23 +1,18 @@
 version: "3.8"
 
-x-logging: &logging
+x-logging-json: &logging_json
   logging:
-    driver: loki
+    driver: "json-file"
     options:
-      loki-url: "http://localhost:3100/api/prom/push"
-      loki-pipeline-stages: |
-        - multiline:
-            firstline: '^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2}'
-            max_wait_time: 3s
-        - regex:
-            expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2},d{3}) (?P<message>(?s:.*))$$'
+      max-file: "5"
+      max-size: "10m"
 
 x-restart-policy:
   restart: unless-stopped
 
 services:
   api:
-    <<: *logging
+    <<: *logging_json
 
     build:
       context: ./api
@@ -34,16 +29,12 @@ services:
     volumes:
     - ./api:/api
 
-    ports:
-    - "8000:8000"
-
     networks:
     - database-access
-    - api-metrics
-    - ordis
+    - infra-metrics
 
   bot:
-    <<: *logging
+    <<: *logging_json
 
     build:
       context: ./bot
@@ -62,15 +53,12 @@ services:
     - ./bot:/bot
 
     networks:
-    - ordis
+    - infra-metrics
 
 networks:
   database-access:
     name: database-access
     external: true
-  api-metrics:
-    name: api-metrics
-    external: true
-  ordis:
-    name: ordis
+  infra-metrics:
+    name: infra-metrics
     external: true

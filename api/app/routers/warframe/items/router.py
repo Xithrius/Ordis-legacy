@@ -1,12 +1,9 @@
-from typing import Annotated
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from httpx import AsyncClient
 from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.dependencies import get_db_session
+from app.database.dependencies import DBSession
 from app.database.models.warframe import WarframeItemModel
 
 from .schemas import ItemsSyncResponse, WarframeItemResponse
@@ -26,7 +23,7 @@ warframe_market_api = AsyncClient(
     status_code=status.HTTP_200_OK,
 )
 async def sync_items(
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    session: DBSession,
 ) -> ItemsSyncResponse:
     r = await warframe_market_api.get("/items")
 
@@ -51,7 +48,7 @@ async def sync_items(
     status_code=status.HTTP_200_OK,
 )
 async def get_all_items(
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    session: DBSession,
     limit: int | None = None,
     offset: int | None = None,
 ) -> list[WarframeItemModel]:
@@ -69,7 +66,7 @@ async def get_all_items(
     status_code=status.HTTP_200_OK,
 )
 async def get_item_by_fuzzy(
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    session: DBSession,
     search: str,
     threshold: float | None = 0.7,
 ) -> WarframeItemModel:
@@ -98,7 +95,7 @@ async def get_item_by_fuzzy(
     status_code=status.HTTP_200_OK,
 )
 async def get_item(
-    session: Annotated[AsyncSession, Depends(get_db_session)],
+    session: DBSession,
     item_id: str,
 ) -> WarframeItemModel:
     stmt = select(WarframeItemModel).where({WarframeItemModel.id == item_id})

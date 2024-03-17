@@ -3,6 +3,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from loguru import logger as log
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
@@ -149,15 +150,26 @@ def _setup_db(app: FastAPI) -> None:
 def setup_opentelemetry(
     app: FastAPI,
     app_name: str | None = "ordis-api",
-    endpoint: str | None = settings.opentelemetry_endpoint,
     log_correlation: bool = True,
 ) -> None:
-    resource = Resource.create(attributes={"service.name": app_name, "compose_service": app_name})
+    if settings.opentelemetry_endpoint is None:
+        log.warning("Telemetry endpoint not configured, no logs will be exported.")
+        return
+
+    resource = Resource.create(
+        attributes={"service.name": app_name, "compose_service": app_name},
+    )
 
     tracer = TracerProvider(resource=resource)
     trace.set_tracer_provider(tracer)
 
-    tracer.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint)))
+    tracer.add_span_processor(
+        BatchSpanProcessor(
+            OTLPSpanExporter(
+                endpoint=settings.opentelemetry_endpoint,
+            ),
+        ),
+    )
 
     if log_correlation:
         LoggingInstrumentor().instrument(set_logging_format=True)
@@ -179,7 +191,7 @@ def stop_opentelemetry(app: FastAPI) -> None:  # pragma: no cover
 
     :param app: current application.
     """
-    if not settings.opentelemetry_endpoint:
+    if settings.opentelemetry_endpoint is None:
         return
 
     LoggingInstrumentor().uninstrument()

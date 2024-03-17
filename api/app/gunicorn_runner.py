@@ -1,15 +1,25 @@
+import logging
 from typing import Any, ClassVar
 
 from gunicorn.app.base import BaseApplication
+from gunicorn.glogging import Logger
 from gunicorn.util import import_app
 from uvicorn.workers import UvicornWorker as BaseUvicornWorker
 
-from .settings import LOG_CONFIG
+from .logging import LOG_CONFIG, EndpointFilter
 
 try:
     import uvloop
 except ImportError:
     uvloop = None
+
+
+class CustomGunicornLogger(Logger):
+    def setup(self, cfg: Any) -> None:
+        super().setup(cfg)
+
+        access_logger = logging.getLogger("gunicorn.access")
+        access_logger.addFilter(EndpointFilter())
 
 
 class UvicornWorker(BaseUvicornWorker):
@@ -51,6 +61,7 @@ class GunicornApplication(BaseApplication):
             "bind": f"{host}:{port}",
             "workers": workers,
             "worker_class": "app.gunicorn_runner.UvicornWorker",
+            "logger_class": CustomGunicornLogger,
             **kwargs,
         }
         self.app = app

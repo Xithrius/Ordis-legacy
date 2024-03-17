@@ -13,8 +13,7 @@ class LocalAPIClient(AsyncClient):
         return MarketItem(**r.json())
 
 
-class WarframeStatusAPIClient(AsyncClient):
-    ...
+class WarframeStatusAPIClient(AsyncClient): ...
 
 
 class WarframeMarketAPIClient(AsyncClient):
