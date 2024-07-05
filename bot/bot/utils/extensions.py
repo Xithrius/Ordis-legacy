@@ -2,21 +2,24 @@ import importlib
 import inspect
 import pkgutil
 import types
-from collections.abc import Iterator
 from typing import NoReturn
 
 
-def ignore_module(module: pkgutil.ModuleInfo) -> bool:
+def ignore_module(module: pkgutil.ModuleInfo) -> bool:  # pragma: no cover
     return any(name.startswith("_") for name in module.name.split("."))
 
 
-def walk_extensions(module: types.ModuleType) -> Iterator[str]:
+def walk_extensions(module: types.ModuleType) -> frozenset[str]:  # pragma: no cover
     def on_error(name: str) -> NoReturn:
         raise ImportError(name=name)
 
     modules = set()
 
-    for module_info in pkgutil.walk_packages(module.__path__, f"{module.__name__}.", onerror=on_error):
+    for module_info in pkgutil.walk_packages(
+        module.__path__,
+        f"{module.__name__}.",
+        onerror=on_error,
+    ):
         if ignore_module(module_info):
             continue
 

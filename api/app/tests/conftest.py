@@ -2,7 +2,7 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 import pytest
-from app.database.dependencies import _get_db_session
+from app.database.dependencies import get_db_session
 from app.database.utils import create_database, drop_database
 from app.routers.application import get_app
 from fastapi import FastAPI
@@ -38,11 +38,9 @@ async def _engine() -> AsyncGenerator[AsyncEngine, None]:
 
     load_all_models()
 
-    postgres = PostgresContainer("postgres:15-alpine")
+    postgres = PostgresContainer("postgres:15-alpine", driver="psycopg")
     postgres.start()
 
-    # https://github.com/testcontainers/testcontainers-python/issues/263#issuecomment-1471334905
-    postgres.driver = "asyncpg"
     url = postgres.get_connection_url()
 
     await create_database(url)
@@ -99,7 +97,7 @@ def fastapi_app(
     :return: fastapi app with mocked dependencies.
     """
     application = get_app()
-    application.dependency_overrides[_get_db_session] = lambda: dbsession
+    application.dependency_overrides[get_db_session] = lambda: dbsession
     return application
 
 
@@ -112,7 +110,8 @@ async def client(
     Fixture that creates client for requesting server.
 
     :param fastapi_app: the application.
+    :param anyio_backend: the anyio backend
     :yield: client for the app.
     """
-    async with AsyncClient(app=fastapi_app, base_url="http://test") as ac:
+    async with AsyncClient(app=fastapi_app, base_url="http://test", timeout=5.0) as ac:
         yield ac

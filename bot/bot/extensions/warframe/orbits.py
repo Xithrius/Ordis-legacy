@@ -26,7 +26,7 @@ class Orbits(Cog):
     @command(aliases=("orbits",))
     async def orbit(self, ctx: Context, planet: str) -> None:
         if planet not in PLANETS:
-            raise ValueError(f"Planet '{planet}' is not of {final_join(PLANETS, final_sep='or')}.")
+            raise ValueError(f"Planet '{planet}' is not of {final_join(PLANETS, final_sep="or")}.")
 
         r = await self.bot.warframe_status_api.get(f"/{planet}Cycle/")
 

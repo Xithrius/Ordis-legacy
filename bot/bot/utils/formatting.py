@@ -12,7 +12,7 @@ def markdown_link(
 def codeblock(code: str | list[str], *, language: str | None = None) -> str:
     block = "\n".join(code) if isinstance(code, list) else code
 
-    return f"```{'' if language is None else language}\n{block}\n```"
+    return f"```{"" if language is None else language}\n{block}\n```"
 
 
 def bold(content: str) -> str:
@@ -22,8 +22,8 @@ def bold(content: str) -> str:
 def final_join(
     items: list[str],
     *,
-    sep: str | None = ", ",
-    final_sep: str | None = "and",
+    sep: str = ", ",
+    final_sep: str = "and",
 ) -> str:
     items_length = len(items)
 

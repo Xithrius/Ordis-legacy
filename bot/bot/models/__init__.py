@@ -11,13 +11,13 @@ from .warframe_market import (
 )
 
 __all__ = (
-    MarketItem,
-    MarketOrderBase,
-    MarketOrderWithCombinedUser,
-    MarketOrderWithUser,
-    MarketSet,
-    MarketSetItemDescription,
-    MarketSetMod,
-    MarketSetWarframeOrItem,
-    MarketUser,
+    "MarketItem",
+    "MarketOrderBase",
+    "MarketOrderWithCombinedUser",
+    "MarketOrderWithUser",
+    "MarketSet",
+    "MarketSetItemDescription",
+    "MarketSetMod",
+    "MarketSetWarframeOrItem",
+    "MarketUser",
 )
