@@ -4,6 +4,6 @@ from .messaging import (
 )
 
 __all__ = (
-    MarketViewBuyInteraction,
-    MarketViewSellInteraction,
+    "MarketViewBuyInteraction",
+    "MarketViewSellInteraction",
 )

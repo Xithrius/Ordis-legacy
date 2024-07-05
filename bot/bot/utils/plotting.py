@@ -19,7 +19,7 @@ async def histogram_2d(
     title: str | None = "Value distribution",
     x_label: str | None = "value",
     y_label: str | None = "frequency",
-    include_outliers: bool | None = False,
+    include_outliers: bool = False,
     ctx: Context | Interaction | None,
 ) -> BytesIO | None:
     @to_async
@@ -29,8 +29,10 @@ async def histogram_2d(
 
         svm.set_title(title)
 
-        svm.set_xlabel(x_label.capitalize())
-        svm.set_ylabel(y_label.capitalize())
+        if (x_l := x_label) is not None:
+            svm.set_xlabel(x_l.capitalize())
+        if (y_l := y_label) is not None:
+            svm.set_ylabel(y_l.capitalize())
 
         buffer = BytesIO()
         svm.get_figure().savefig(buffer, format="png")
@@ -40,8 +42,8 @@ async def histogram_2d(
 
         return buffer
 
-    if not include_outliers:
-        df = remove_outliers(df, x_label)
+    if include_outliers and (x_l := x_label) is not None:
+        df = remove_outliers(df, x_l)
 
     b = await __build_histogram_2d(df)
 
@@ -66,7 +68,7 @@ async def barplot_2d(
     title: str | None = "Values",
     x_label: str | None = "percentiles",
     y_label: str | None = "amount",
-    include_outliers: bool | None = False,
+    include_outliers: bool = False,
     ctx: Context | Interaction | None,
 ) -> BytesIO | None:
     @to_async
@@ -76,8 +78,10 @@ async def barplot_2d(
 
         svm.set_title(title)
 
-        svm.set_xlabel(x_label.capitalize())
-        svm.set_ylabel(y_label.capitalize())
+        if (x_l := x_label) is not None:
+            svm.set_xlabel(x_l.capitalize())
+        if (y_l := y_label) is not None:
+            svm.set_ylabel(y_l.capitalize())
 
         buffer = BytesIO()
         svm.get_figure().savefig(buffer, format="png")
@@ -87,8 +91,8 @@ async def barplot_2d(
 
         return buffer
 
-    if not include_outliers:
-        df = remove_outliers(df, x_label)
+    if include_outliers and (x_l := x_label) is not None:
+        df = remove_outliers(df, x_l)
 
     b = await __build_barplot_2d(df)
 

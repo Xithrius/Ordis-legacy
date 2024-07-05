@@ -56,7 +56,7 @@ class MarketSetWarframeOrItem(BaseModel):
     sub_icon: str | None = None
     trading_tax: int
     icon: str
-    quantity_for_set: int = None
+    quantity_for_set: int | None = None
     ducats: int | None = None
     id: str
     url_name: str

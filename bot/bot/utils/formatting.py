@@ -22,8 +22,8 @@ def bold(content: str) -> str:
 def final_join(
     items: list[str],
     *,
-    sep: str | None = ", ",
-    final_sep: str | None = "and",
+    sep: str = ", ",
+    final_sep: str = "and",
 ) -> str:
     items_length = len(items)
 

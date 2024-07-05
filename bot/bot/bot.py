@@ -32,10 +32,9 @@ class Ordis(Bot):
         )
 
         self.database_items_synced: bool = False
-        self.database_items_sync_task: Task | None = None
+        self.database_items_sync_task: Task[None]
 
-    async def get_context(self, message: Message, *, cls: Context = Context) -> Context:
-        """Defines the custom context."""
+    async def get_context(self, message: Message, *, cls: Context = Context) -> Context:  # type: ignore [assignment]
         return await super().get_context(message, cls=cls)
 
     async def populate_items_cache(self) -> None:

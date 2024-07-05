@@ -92,20 +92,20 @@ def order_interaction(action: str) -> Callable[[], Awaitable[None]]:
             await interaction.response.send_message(f"```{msg}```", ephemeral=True)
             self.stop()
 
-        return wrapper
+        return wrapper  # type: ignore [return-value]
 
-    return decorator
+    return decorator  # type: ignore [return-value]
 
 
 class MarketViewBuyInteraction(MarketView):
-    @button(label="Buy", style=ButtonStyle.green)
+    @button(label="Buy", style=ButtonStyle.green)  # type: ignore [call-arg]
     @order_interaction(action="buy")
     async def buy(self, interaction: Interaction, button: Button) -> None:
         pass
 
 
 class MarketViewSellInteraction(MarketView):
-    @button(label="Sell", style=ButtonStyle.green)
+    @button(label="Sell", style=ButtonStyle.green)  # type: ignore [call-arg]
     @order_interaction(action="sell")
     async def sell(self, interaction: Interaction, button: Button) -> None:
         pass

@@ -29,7 +29,8 @@ class Market(Cog):
             return f"{ign} (+{rep}) is {action} **{quantity}** for **{platinum}** platinum"
 
         async def __filter_best_item() -> tuple[MarketOrderWithCombinedUser, pd.DataFrame]:
-            item_orders = await self.bot.warframe_market_api.get_market_item_orders(item.url_name)
+            if (some_item := item) is not None:
+                item_orders = await self.bot.warframe_market_api.get_market_item_orders(some_item.url_name)
 
             df = pd.DataFrame(item_orders)
             filter_orders = "buy" if order_type == "buyers" else "sell"
@@ -61,9 +62,9 @@ class Market(Cog):
 
         best_item, df = await __filter_best_item()
 
-        best_item: MarketOrderWithCombinedUser = best_item
+        best_item_obj: MarketOrderWithCombinedUser = best_item
 
-        raw_embed = __build_embed_section(best_item)
+        raw_embed = __build_embed_section(best_item_obj)
 
         item_name = " ".join(f"{x[0].upper()}{x[1:]}" for x in item.item_name.split("_"))
 

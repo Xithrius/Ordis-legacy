@@ -13,6 +13,7 @@ router = APIRouter()
 warframe_market_api = AsyncClient(
     base_url="https://api.warframe.market/v1/",
     headers={"Language": "en"},
+    timeout=15.0,
 )
 
 
@@ -38,7 +39,7 @@ async def sync_items(
 
     rows = result.all()
 
-    return {"new": len(rows)}
+    return ItemsSyncResponse(new=len(rows))
 
 
 @router.get(
