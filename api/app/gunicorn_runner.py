@@ -14,6 +14,10 @@ except ImportError:
     uvloop = None
 
 
+class LoadConfigError(Exception):
+    """Error raised when the config cannot be loaded."""
+
+
 class CustomGunicornLogger(Logger):
     def setup(self, cfg: Any) -> None:
         super().setup(cfg)
@@ -74,8 +78,11 @@ class GunicornApplication(BaseApplication):
         This function is used to set parameters to gunicorn
         main process. It only sets parameters that
         gunicorn can handle. If you pass unknown
-        parameter to it, it crash with error.
+        parameter to it, this will crash with an error.
         """
+        if self.cfg is None:
+            raise LoadConfigError("Failed to load Gunicorn Application config")
+
         for key, value in self.options.items():
             if key in self.cfg.settings and value is not None:
                 self.cfg.set(key.lower(), value)
