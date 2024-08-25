@@ -6,7 +6,7 @@ requires-python = ">=3.12"
 dev = [
     "-e file:///${PROJECT_ROOT}/api",
     "-e file:///${PROJECT_ROOT}/bot",
-    "pre-commit>=3.7.1",
+    "pre-commit>=3.8.0",
 ]
 
 [tool.pdm.scripts]
